@@ -40,3 +40,11 @@ export interface User {
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
 }
+
+export interface Connection {
+    id: string;
+    name: string;
+    type: string;
+    image: string;
+    access?: boolean;
+}

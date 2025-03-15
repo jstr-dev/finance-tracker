@@ -3,14 +3,15 @@
 namespace App\Http\Controllers\Connections;
 
 use App\Http\Controllers\Controller;
+use App\Models\Connection;
 use Inertia\Inertia;
 
 class ConnectionsController extends Controller
 {
     public function index()
     {
-        $connections = collect();
+        $connections = Connection::all()->append('access');
 
-        return Inertia::render('connections');
+        return Inertia::render('connections', compact('connections'));
     }
 }
