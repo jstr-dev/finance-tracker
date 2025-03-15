@@ -13,6 +13,11 @@ const mainNavItems: NavItem[] = [
         url: '/dashboard',
         icon: LayoutGrid,
     },
+    {
+        title: 'Connections',
+        url: '/connections',
+        icon: null
+    }
 ];
 
 const footerNavItems: NavItem[] = [
