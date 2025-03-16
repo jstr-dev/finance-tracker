@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, UserConnection } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import {useState} from 'react';
+import { useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -44,50 +44,62 @@ function ConnectionDetailsCard()
     </Card>    
 }
 
-function InactivePanel()
-{
-    const [token, setToken] = useState<string>('');
-    const [tokenError, setTokenError] = useState<string>('');
-
-    const onSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!token) {
-            setTokenError('Please enter a token.');
-            return;
-        }
-
-        router.post('/connections/trading212', {token: token});
-    }
-
-    return <>
-        <ConnectionDetailsCard />
-        <Card className="py-4">
-            <CardHeader className="px-4 pb-0">
-                <CardTitle className="text-sm">Add a new connection</CardTitle>
-                <CardDescription className="text-xs">Connect a new Trading212 account by entering your API Token below.</CardDescription>
-            </CardHeader>
-            <CardContent className="px-4 py-0">
-                <form className="flex flex-col gap-6" onSubmit={onSubmit}>
-                    <div className="flex flex-col space-y-2">
-                        <Label htmlFor="token">API Token</Label>
-                        <Input name="token" placeholder="Enter your token..." 
-                            value={token} onChange={(e) => setToken(e.target.value)}/>
-                        {tokenError && <p className="text-xs text-red-600">{tokenError}</p>}
-                    </div>
-
-                    <Button type="submit" className="hover:cursor-pointer">Add Connection</Button>
-                </form>
-            </CardContent>
-        </Card>
-    </>
+interface TokenValidationErrors {
+    token?: string;
 }
 
-export default function Trading212({activeConnections}: {activeConnections: UserConnection[]}) {
+export default function Trading212({ activeConnections, errors }: { activeConnections: UserConnection[]; errors: TokenValidationErrors }) {
+    const InactivePanel = () => {
+        const [token, setToken] = useState<string>('');
+        const [tokenError, setTokenError] = useState<string>('');
+
+        const onSubmit = (e: React.FormEvent) => {
+            e.preventDefault();
+
+            if (!token) {
+                setTokenError('Please enter a token.');
+                return;
+            }
+
+            router.post('/connections/trading212', { token: token });
+        };
+
+        useEffect(() => {
+            if (errors.token) {
+                setTokenError(errors.token);
+            }
+        }, []);
+
+        return (
+            <>
+                <Card className="py-4">
+                    <CardHeader className="px-4 pb-0">
+                        <CardTitle className="text-sm">Add a new connection</CardTitle>
+                        <CardDescription className="text-xs">Connect a new Trading212 account by entering your API Token below.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="px-4 py-0">
+                        <form className="flex flex-col gap-6" onSubmit={onSubmit}>
+                            <div className="flex flex-col space-y-2">
+                                <Label htmlFor="token">API Token</Label>
+                                <Input name="token" placeholder="Enter your token..." value={token} onChange={(e) => setToken(e.target.value)} />
+                                {tokenError && <p className="text-xs text-red-600">{tokenError}</p>}
+                            </div>
+
+                            <Button type="submit" className="hover:cursor-pointer">
+                                Add Connection
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
+            </>
+        );
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Trading212" />
-            <div className="container mx-auto max-w-4xl p-4 w-full flex flex-col gap-4">
+            <div className="container mx-auto flex w-full max-w-4xl flex-col gap-4 p-4">
+                <ConnectionDetailsCard />
                 {activeConnections.length ? <ActivePanel /> : <InactivePanel />}
             </div>
         </AppLayout>

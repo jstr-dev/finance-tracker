@@ -15,10 +15,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 interface ConnectionsProps {
     connections: Connection[];
-    userConnections: UserConnection[];
+    userConnections: string[];
 }
 
-function ConnectionCard({ connection, userConnections }: { connection: Connection, userConnections: UserConnection[] }) {
+function ConnectionCard({ connection, userConnections }: { connection: Connection, userConnections: string[] }) {
     const onClick = () => {
         router.visit('/connections/' + connection.id, {method: 'get'});
     }
@@ -29,7 +29,7 @@ function ConnectionCard({ connection, userConnections }: { connection: Connectio
     }
 
     const isActiveConn = (connectionId: string) => {
-        return userConnections.filter(uc => uc.user_id === connectionId).length > 0;
+        return userConnections.filter(uc => uc === connectionId).length > 0;
     }
 
     return (
