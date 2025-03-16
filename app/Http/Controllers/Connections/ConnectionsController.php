@@ -16,6 +16,6 @@ class ConnectionsController extends Controller
             $connection->image = asset('storage/assets/logos/' . $connection->image);
         });
 
-        return Inertia::render('connections', compact('connections'));
+        return Inertia::render('connections/index', compact('connections'));
     }
 }

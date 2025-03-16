@@ -2,7 +2,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/ca
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, Connection } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -17,8 +17,17 @@ interface ConnectionsProps {
 }
 
 function ConnectionCard({ connection }: { connection: Connection }) {
+    const onClick = () => {
+        router.visit('/connections/' + connection.id, {method: 'get'});
+    }
+
+    const onHover = () => {
+        if (!connection.access) return;
+        router.prefetch('/connections/' + connection.id, {method: 'get'}, {cacheFor: '1m'});
+    }
+
     return (
-        <Card className="py-0 hover:bg-muted hover:cursor-pointer h-full gap-3">
+        <Card className="py-0 hover:bg-muted hover:cursor-pointer h-full gap-3" onClick={onClick} onMouseEnter={onHover}>
             <img src={connection.image} alt={'Image of ' + connection.name}
                 className="h-32 w-full object-cover rounded-t-xl" />
             <CardHeader className="px-4 pb-4">
