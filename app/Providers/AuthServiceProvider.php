@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Connection;
 use Gate;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
@@ -26,6 +27,8 @@ class AuthServiceProvider extends ServiceProvider
 
     private function addConnectionGates(): void
     {
+        if (!Schema::hasTable('connections')) return;
+
         $connectionGates = Connection::pluck('id')->all();
 
         foreach ($connectionGates as $connectionGate) {

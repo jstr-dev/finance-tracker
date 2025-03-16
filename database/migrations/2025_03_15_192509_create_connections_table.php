@@ -24,7 +24,7 @@ return new class extends Migration
             'id' => 'trading212',
             'name' => 'Trading212',
             'description' => 'Connect your Trading212 account to see how your investments effect your wealth.',
-            'image' => 'connections/trading212.svg'
+            'image' => 'trading212.png'
         ]);
     }
 

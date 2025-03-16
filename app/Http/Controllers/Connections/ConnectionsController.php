@@ -12,6 +12,10 @@ class ConnectionsController extends Controller
     {
         $connections = Connection::all()->append('access');
 
+        $connections->each(function ($connection) {
+            $connection->image = asset('storage/assets/logos/' . $connection->image);
+        });
+
         return Inertia::render('connections', compact('connections'));
     }
 }
