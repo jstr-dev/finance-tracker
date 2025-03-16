@@ -9,6 +9,7 @@ class Trading212Controller extends Controller
 {
     public function index()
     {
+        
         return Inertia::render('connections/trading212');
     }
 }
