@@ -56,7 +56,7 @@ export default function Connections({ connections }: ConnectionsProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Connections" />
-            <div className="max-w-5xl mx-auto flex w-full flex-col gap-6 p-4">
+            <div className="max-w-5xl mx-auto flex w-full flex-col gap-6 p-4 mt-2">
                 <div className="w-full">
                     <Input
                         placeholder="Search connections..."
