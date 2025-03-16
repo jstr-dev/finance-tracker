@@ -9,7 +9,16 @@ class Trading212Controller extends Controller
 {
     public function index()
     {
+        $activeConnections = auth()->user()
+            ->connections()
+            ->scopes(['trading212'])
+            ->get();
+
+        return Inertia::render('connections/trading212', compact('activeConnections'));
+    }
+
+    public function store()
+    {
         
-        return Inertia::render('connections/trading212');
     }
 }

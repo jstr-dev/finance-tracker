@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\Route;
 Route::group(['controller' => ConnectionsController::class, 'prefix' => 'connections', 'middleware' => 'auth'], function () {
     Route::get('', 'index');
 
-    Route::group(['prefix' => 'trading212', 'controller' => Trading212Controller::class], function () {
-        Route::get('', 'index');
+    Route::group(['prefix' => 'trading212', 'controller' => Trading212Controller::class, 'middleware' => 'can:trading212'], function () {
+        Route::get('', 'index')->name('trading212.index');
+        Route::post('', 'store')->name('trading212.store');
     });
 });

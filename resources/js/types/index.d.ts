@@ -48,3 +48,7 @@ export interface Connection {
     image: string;
     access?: boolean;
 }
+
+export interface UserConnection {
+    user_id: int;
+}
