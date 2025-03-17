@@ -54,7 +54,7 @@ export default function Connections({ connections, userConnections }: Connection
     const [search, setSearch] = useState<string>('');
 
     // TODO: remove
-    if (true) {
+    if (false) {
         const generateRandomConnections = (count: number): Connection[] => {
             const randomConnections: Connection[] = [];
             for (let i = 0; i < count; i++) {
