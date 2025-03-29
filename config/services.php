@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'trading212' => [
+        'uri' => 'https://live.trading212.com/api/',
+        'version' => 'v0',
+    ]
 ];

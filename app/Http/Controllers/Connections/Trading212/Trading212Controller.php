@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Connections\Trading212;
 
 use App\Http\Controllers\Controller;
 use App\Models\UserConnection;
+use App\Services\Trading212Service;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -19,7 +20,7 @@ class Trading212Controller extends Controller
         return Inertia::render('connections/trading212', compact('activeConnections'));
     }
 
-    public function store()
+    public function store(Trading212Service $service)
     {
         $existingTokens = auth()->user()->connections()->scopes('trading212')->pluck('access_token')->toArray();
 
@@ -28,7 +29,11 @@ class Trading212Controller extends Controller
         }, $existingTokens);
         
         request()->validate([
-            'token' => ['required', 'string', Rule::notIn($existingTokens), 'min:10']
+            'token' => ['required', 'string', Rule::notIn($existingTokens), 'min:10', function ($attribute, $value, $fail) use ($service) {
+                if (!$service->validateToken($value)) {
+                    $fail('The provided token is invalid.');
+                }
+            }]
         ]);
 
         $connection = new UserConnection();
