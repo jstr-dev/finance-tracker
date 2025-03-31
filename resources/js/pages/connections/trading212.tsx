@@ -95,7 +95,7 @@ export default function Trading212({ activeConnections, errors }: { activeConnec
         return <>
             <Card className="py-4">
                 <CardHeader className="px-4 pb-0">
-                    <CardTitle className="text-sm">Your Accounts</CardTitle>
+                    <CardTitle className="text-sm">Your Account</CardTitle>
                 </CardHeader>
             </Card>
         </>

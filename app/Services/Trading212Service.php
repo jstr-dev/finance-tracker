@@ -27,6 +27,30 @@ class Trading212Service {
         return $res->json();
     }
 
+    public function getAllPies(UserConnection $conn)
+    {
+        $res = $this->getHttp($conn)
+            ->get("/equity/pies");
+
+        return $res->json();
+    }
+
+    public function getPie(UserConnection $conn, int $id)
+    {
+        $res = $this->getHttp($conn)
+            ->get("/equity/pies/$id");
+
+        return $res->json();
+    }
+
+    public function getInstruments(UserConnection $conn)
+    {
+        $res = $this->getHttp($conn)
+            ->get("/equity/metadata/instruments");
+
+        return $res->json();
+    }
+
     public function validateToken(string $token)
     {
         $res = Http::withHeader('Authorization', $token)
