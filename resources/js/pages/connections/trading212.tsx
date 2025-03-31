@@ -25,8 +25,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 function ConnectionDetailsCard()
 {
     return <Card className="p-0 text-secondary">
-        <CardHeader className="p-0 flex flex-row">
-            <CardTitle className="text-md flex flex-row items-center gap-4 w-80 bg-secondary-foreground rounded-l-md p-4">
+        <CardHeader className="p-0 flex flex-row max-sm:flex-col">
+            <CardTitle className="text-md flex flex-row items-center gap-4 w-80 bg-secondary-foreground rounded-l-md max-sm:rounded-t-md p-4 max-sm:w-full">
                 <img src="/storage/assets/logos/trading212.png" className="ml-2 h-8 w-8 rounded-md" />
                 <span>Trading 212</span>
             </CardTitle>
@@ -37,7 +37,7 @@ function ConnectionDetailsCard()
                 </p>
             </CardContent>
         </CardHeader>
-    </Card>    
+    </Card>
 }
 
 interface TokenValidationErrors {
