@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Connections\Trading212;
 use App\Http\Controllers\Controller;
 use App\Models\UserConnection;
 use App\Services\Trading212Service;
+use DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -15,6 +16,7 @@ class Trading212Controller extends Controller
         $activeConnections = auth()->user()
             ->connections()
             ->scopes(['trading212'])
+            ->with(['metas' => fn ($q) => $q->where('key', 'initial_sync')])
             ->get();
 
         return Inertia::render('connections/trading212', compact('activeConnections'));
@@ -24,10 +26,7 @@ class Trading212Controller extends Controller
     {
         $existingTokens = auth()->user()->connections()->scopes('trading212')->pluck('access_token')->toArray();
 
-        array_map(function ($token) {
-            return decrypt($token);
-        }, $existingTokens);
-        
+        array_map(fn($token) => decrypt($token), $existingTokens);
         request()->validate([
             'token' => ['required', 'string', Rule::notIn($existingTokens), 'min:10', function ($attribute, $value, $fail) use ($service) {
                 if (!$service->validateToken($value)) {
@@ -36,12 +35,18 @@ class Trading212Controller extends Controller
             }]
         ]);
 
-        $connection = new UserConnection();
-        $connection->connection_type = 'trading212';
-        $connection->access_token = encrypt(request('token'));
-        $connection->user_id = auth()->id();
-        $connection->last_4_of_token = substr(request('token'), -4);
-        $connection->save();
+        DB::transaction(function () {
+            $connection = new UserConnection();
+            $connection->connection_type = 'trading212';
+            $connection->access_token = encrypt(request('token'));
+            $connection->user_id = auth()->id();
+            $connection->last_4_of_token = substr(request('token'), -4);
+
+            $connection->save();
+            $connection->setMeta('initial_sync', false);
+
+            // $service->sync($connection);
+        });
 
         return to_route('trading212.index')->with([
             'success' => 'Trading212 connection created successfully'
