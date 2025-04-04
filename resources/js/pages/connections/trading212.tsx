@@ -1,3 +1,4 @@
+import Loader from '@/components/loader';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -100,11 +101,10 @@ export default function Trading212({ connection, errors }: { connection: UserCon
                         <CardTitle className="text-sm">Your Account</CardTitle>
                     </CardHeader>
                     <CardDescription>
-                        {connection?.metas.find((m) => m.key === 'initial_sync')?.value === 'false' && <div className="flex flex-col gap-1 justify-center items-center">
-                            <div className="text-lg text-black">Fetching account information</div>
-                            <div className="text-xs mb-4">This may take a while, grab a coffee!</div>
-                            <span className="loader"></span>
-                        </div>}
+                        {connection?.metas.find((m) => m.key === 'initial_sync')?.value === 'false' && <Loader
+                            title="Fetching account information"
+                            hint="This may take a while, grab a coffee!"
+                        />}
                     </CardDescription>
                 </Card>
             </>
