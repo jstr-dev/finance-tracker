@@ -157,3 +157,20 @@
         @apply bg-background text-foreground;
     }
 }
+
+.loader {
+    width: 34px;
+    height: 34px;
+    border: 2px solid rgb(0, 150, 200);
+    border-bottom-color: transparent;
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+}
+
+
+@keyframes rotation {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

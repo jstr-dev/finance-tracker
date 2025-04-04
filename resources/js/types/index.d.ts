@@ -51,4 +51,10 @@ export interface Connection {
 
 export interface UserConnection {
     user_id: int;
+    metas: UserConnectionMeta[];
+}
+
+export interface UserConnectionMeta {
+    key: string;
+    value: any;
 }

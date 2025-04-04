@@ -13,13 +13,13 @@ class Trading212Controller extends Controller
 {
     public function index()
     {
-        $activeConnections = auth()->user()
+        $connection = auth()->user()
             ->connections()
             ->scopes(['trading212'])
             ->with(['metas' => fn ($q) => $q->where('key', 'initial_sync')])
-            ->get();
+            ->first();
 
-        return Inertia::render('connections/trading212', compact('activeConnections'));
+        return Inertia::render('connections/trading212', compact('connection'));
     }
 
     public function store(Trading212Service $service)

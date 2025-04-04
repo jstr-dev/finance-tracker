@@ -1,3 +1,4 @@
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -44,7 +45,7 @@ interface TokenValidationErrors {
     token?: string;
 }
 
-export default function Trading212({ activeConnections, errors }: { activeConnections: UserConnection[]; errors: TokenValidationErrors }) {
+export default function Trading212({ connection, errors }: { connection: UserConnection | null; errors: TokenValidationErrors }) {
     const InactivePanel = () => {
         const [token, setToken] = useState<string>('');
         const [tokenError, setTokenError] = useState<string>('');
@@ -92,21 +93,30 @@ export default function Trading212({ activeConnections, errors }: { activeConnec
     };
 
     const ActivePanel = () => {
-        return <>
-            <Card className="py-4">
-                <CardHeader className="px-4 pb-0">
-                    <CardTitle className="text-sm">Your Account</CardTitle>
-                </CardHeader>
-            </Card>
-        </>
-    }
+        return (
+            <>
+                <Card className="py-4 gap-2 pb-8">
+                    <CardHeader className="px-4 pb-0">
+                        <CardTitle className="text-sm">Your Account</CardTitle>
+                    </CardHeader>
+                    <CardDescription>
+                        {connection?.metas.find((m) => m.key === 'initial_sync')?.value === 'false' && <div className="flex flex-col gap-1 justify-center items-center">
+                            <div className="text-lg text-black">Fetching account information</div>
+                            <div className="text-xs mb-4">This may take a while, grab a coffee!</div>
+                            <span className="loader"></span>
+                        </div>}
+                    </CardDescription>
+                </Card>
+            </>
+        );
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Trading212" />
             <div className="container mx-auto flex w-full max-w-4xl flex-col gap-4 p-4">
                 <ConnectionDetailsCard />
-                {activeConnections.length ? <ActivePanel /> : <InactivePanel />}
+                {connection ? <ActivePanel /> : <InactivePanel />}
             </div>
         </AppLayout>
     );
