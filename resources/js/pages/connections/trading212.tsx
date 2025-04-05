@@ -1,3 +1,4 @@
+import ConnectionDetailsCard from '@/components/custom/connection-details-card';
 import Loader from '@/components/loader';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -20,27 +21,6 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/connections/trading212',
     },
 ];
-
-/*
-    TODO: Add this to a individual component so we can reuse it on other connections.
-*/
-function ConnectionDetailsCard()
-{
-    return <Card className="p-0 text-secondary">
-        <CardHeader className="p-0 flex flex-row max-sm:flex-col">
-            <CardTitle className="text-md flex flex-row items-center gap-4 w-80 bg-secondary-foreground rounded-l-md max-sm:rounded-t-md p-4 max-sm:w-full">
-                <img src="/storage/assets/logos/trading212.png" className="ml-2 h-8 w-8 rounded-md" />
-                <span>Trading 212</span>
-            </CardTitle>
-            <CardContent className="rounded-r-2xl text-xs w-full text-primary p-4 flex flex-col gap-2">
-                <p>This connection allows you to connect your Trading 212 account with our platform.</p>
-                <p>
-                    By connecting Trading 212 you will be able to see your investments within our platform and use them to track a more accurate picture of your net worth
-                </p>
-            </CardContent>
-        </CardHeader>
-    </Card>
-}
 
 interface TokenValidationErrors {
     token?: string;
@@ -115,7 +95,13 @@ export default function Trading212({ connection, errors }: { connection: UserCon
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Trading212" />
             <div className="container mx-auto flex w-full max-w-4xl flex-col gap-4 p-4">
-                <ConnectionDetailsCard />
+                <ConnectionDetailsCard imageName="trading212.png" 
+                heading="Trading212" >
+                    <p>This connection allows you to connect your Trading 212 account with our platform.</p>
+                    <p>
+                    By connecting Trading 212 you will be able to see your investments within our platform and use them to track a more accurate picture of your net worth
+                    </p>
+                </ConnectionDetailsCard>
                 {connection ? <ActivePanel /> : <InactivePanel />}
             </div>
         </AppLayout>
