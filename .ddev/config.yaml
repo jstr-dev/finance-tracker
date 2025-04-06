@@ -14,7 +14,16 @@ composer_version: "2"
 web_environment: []
 corepack_enable: false
 host_db_port: 58763
-
+web_extra_exposed_ports:
+  - name: reverb
+    container_port: 8080
+    https_port: 8080
+    http_port: 8081
+web_extra_daemons:
+  - name: reverb
+    command: "cd ${DDEV_COMPOSER_ROOT} && php artisan reverb:start"
+    directory: /var/www/html
+disable_http2: true
 # Key features of DDEV's config.yaml:
 
 # name: <projectname> # Name of the project, automatically provides

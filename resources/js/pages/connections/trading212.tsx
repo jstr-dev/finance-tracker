@@ -6,8 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem, UserConnection } from '@/types';
-import { Head, router } from '@inertiajs/react';
+import { BreadcrumbItem, SharedData, UserConnection } from '@/types';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -27,6 +27,18 @@ interface TokenValidationErrors {
 }
 
 export default function Trading212({ connection, errors }: { connection: UserConnection | null; errors: TokenValidationErrors }) {
+    const { auth } = usePage<SharedData>().props;
+
+    useEffect(() => {
+        window.Echo.private('user.' + auth.user.id).listen('Trading212SyncComplete', (data: any) => {
+            router.visit('/connections/trading212', { method: 'get' });
+        });
+
+        return () => {
+            window.Echo.private('user.' + auth.user.id).stopListening('Trading212SyncComplete');
+        };
+    }, []);
+
     const InactivePanel = () => {
         const [token, setToken] = useState<string>('');
         const [tokenError, setTokenError] = useState<string>('');
@@ -76,15 +88,14 @@ export default function Trading212({ connection, errors }: { connection: UserCon
     const ActivePanel = () => {
         return (
             <>
-                <Card className="py-4 gap-2 pb-8">
+                <Card className="gap-2 py-4 pb-8">
                     <CardHeader className="px-4 pb-0">
                         <CardTitle className="text-sm">Your Account</CardTitle>
                     </CardHeader>
                     <CardDescription>
-                        {connection?.metas.find((m) => m.key === 'initial_sync')?.value === 'false' && <Loader
-                            title="Fetching account information"
-                            hint="This may take a while, grab a coffee!"
-                        />}
+                        {connection?.metas.find((m) => m.key === 'initial_sync')?.value === 'false' && (
+                            <Loader title="Fetching account information" hint="This may take a while, grab a coffee!" />
+                        )}
                     </CardDescription>
                 </Card>
             </>
@@ -95,11 +106,11 @@ export default function Trading212({ connection, errors }: { connection: UserCon
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Trading212" />
             <div className="container mx-auto flex w-full max-w-4xl flex-col gap-4 p-4">
-                <ConnectionDetailsCard imageName="trading212.png" 
-                heading="Trading212" >
+                <ConnectionDetailsCard imageName="trading212.png" heading="Trading212">
                     <p>This connection allows you to connect your Trading 212 account with our platform.</p>
                     <p>
-                    By connecting Trading 212 you will be able to see your investments within our platform and use them to track a more accurate picture of your net worth
+                        By connecting Trading 212 you will be able to see your investments within our platform and use them to track a more accurate
+                        picture of your net worth
                     </p>
                 </ConnectionDetailsCard>
                 {connection ? <ActivePanel /> : <InactivePanel />}
