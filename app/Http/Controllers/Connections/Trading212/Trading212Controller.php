@@ -29,11 +29,11 @@ class Trading212Controller extends Controller
 
         array_map(fn($token) => decrypt($token), $existingTokens);
         request()->validate([
-            // 'token' => ['required', 'string', Rule::notIn($existingTokens), 'min:10', function ($attribute, $value, $fail) use ($service) {
-            //     if (!$service->validateToken($value)) {
-            //         $fail('The provided token is invalid.');
-            //     }
-            // }]
+            'token' => ['required', 'string', Rule::notIn($existingTokens), 'min:10', function ($attribute, $value, $fail) use ($service) {
+                if (!$service->validateToken($value)) {
+                    $fail('The provided token is invalid.');
+                }
+            }]
         ]);
 
         $connection = DB::transaction(function () {
