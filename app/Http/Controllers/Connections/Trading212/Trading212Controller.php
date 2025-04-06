@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Connections\Trading212;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SyncTrading212Data;
 use App\Models\UserConnection;
 use App\Services\Trading212Service;
 use DB;
@@ -28,14 +29,14 @@ class Trading212Controller extends Controller
 
         array_map(fn($token) => decrypt($token), $existingTokens);
         request()->validate([
-            'token' => ['required', 'string', Rule::notIn($existingTokens), 'min:10', function ($attribute, $value, $fail) use ($service) {
-                if (!$service->validateToken($value)) {
-                    $fail('The provided token is invalid.');
-                }
-            }]
+            // 'token' => ['required', 'string', Rule::notIn($existingTokens), 'min:10', function ($attribute, $value, $fail) use ($service) {
+            //     if (!$service->validateToken($value)) {
+            //         $fail('The provided token is invalid.');
+            //     }
+            // }]
         ]);
 
-        DB::transaction(function () {
+        $connection = DB::transaction(function () {
             $connection = new UserConnection();
             $connection->connection_type = 'trading212';
             $connection->access_token = encrypt(request('token'));
@@ -45,8 +46,10 @@ class Trading212Controller extends Controller
             $connection->save();
             $connection->setMeta('initial_sync', false);
 
-            // $service->sync($connection);
+            return $connection;
         });
+
+        SyncTrading212Data::dispatch($connection);
 
         return to_route('trading212.index')->with([
             'success' => 'Trading212 connection created successfully'
