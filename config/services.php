@@ -38,5 +38,10 @@ return [
     'trading212' => [
         'uri' => 'https://live.trading212.com/api/',
         'version' => 'v0',
+    ],
+
+    'monzo' => [
+        'client_id' => env('MONZO_CLIENT_ID'),
+        'client_secret' => env('MONZO_CLIENT_SECRET'),
     ]
 ];

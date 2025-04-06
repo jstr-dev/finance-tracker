@@ -18,6 +18,11 @@ class UserConnection extends Model
         return $query->where('connection_type', 'trading212');
     }
 
+    public function scopeMonzo(Builder $query)
+    {
+        return $query->where('connection_type', 'monzo');
+    }
+
     public function getAccessToken()
     {
         if ($this->decryptedToken) {
