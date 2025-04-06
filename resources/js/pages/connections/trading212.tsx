@@ -30,8 +30,8 @@ export default function Trading212({ connection, errors }: { connection: UserCon
     const { auth } = usePage<SharedData>().props;
 
     useEffect(() => {
-        window.Echo.private('user.' + auth.user.id).listen('Trading212SyncComplete', (data) => {
-            console.log('hi');
+        window.Echo.private('user.' + auth.user.id).listen('Trading212SyncComplete', (data: any) => {
+            router.visit('/connections/trading212', { method: 'get' });
         });
 
         return () => {
@@ -53,8 +53,6 @@ export default function Trading212({ connection, errors }: { connection: UserCon
 
             router.post('/connections/trading212', { token: token });
         };
-
-        const { auth } = usePage<SharedData>().props;
 
         useEffect(() => {
             if (errors.token) {
