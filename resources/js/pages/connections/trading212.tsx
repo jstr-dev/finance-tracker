@@ -27,6 +27,18 @@ interface TokenValidationErrors {
 }
 
 export default function Trading212({ connection, errors }: { connection: UserConnection | null; errors: TokenValidationErrors }) {
+    const { auth } = usePage<SharedData>().props;
+
+    useEffect(() => {
+        window.Echo.private('user.' + auth.user.id).listen('Trading212SyncComplete', (data) => {
+            console.log('hi');
+        });
+
+        return () => {
+            window.Echo.private('user.' + auth.user.id).stopListening('Trading212SyncComplete');
+        };
+    }, []);
+
     const InactivePanel = () => {
         const [token, setToken] = useState<string>('');
         const [tokenError, setTokenError] = useState<string>('');
@@ -48,10 +60,6 @@ export default function Trading212({ connection, errors }: { connection: UserCon
             if (errors.token) {
                 setTokenError(errors.token);
             }
-
-            window.Echo.private('user.' + auth.user.id).listen('Trading212SyncComplete', (data) => {
-                console.log('hi');
-            });
         }, []);
 
         return (
