@@ -10,9 +10,10 @@ function ConnectionDetailsCard({ imageName, heading, children }: ConnectionDetai
 {
     return <Card className="p-0 text-secondary">
         <CardHeader className="p-0 flex flex-row max-sm:flex-col">
-            <CardTitle className="text-md flex flex-row items-center gap-4 w-80 bg-secondary-foreground rounded-l-md max-sm:rounded-t-md p-4 max-sm:w-full">
+            <CardTitle className={'text-md flex flex-row items-center gap-4 w-80' +
+                ' bg-secondary-foreground dark:bg-muted sm:rounded-l-md max-sm:rounded-t-md p-4 max-sm:w-full'}>
                 <img src={`/storage/assets/logos/${imageName}`} className="ml-2 h-8 w-8 rounded-md" />
-                <span>{heading}</span>
+                <span className="dark:text-white">{heading}</span>
             </CardTitle>
             <CardContent className="rounded-r-2xl text-xs w-full text-primary p-4 flex flex-col gap-2">
                 {children}
