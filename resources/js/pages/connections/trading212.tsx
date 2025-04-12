@@ -100,19 +100,25 @@ export default function Trading212({
                 <CardHeader className="px-4 pb-0">
                     <CardTitle className="text-sm">Your Account</CardTitle>
                 </CardHeader>
-                <CardDescription className="px-4 py-2">
+                <CardDescription className="px-4">
                     {connection?.metas.find((m) => m.key === 'initial_sync')?.value === 'false' ? (
                         <Loader title="Fetching account information" hint="This may take a while, grab a coffee!" />
                     ) : (
-                        <>
-                            <Alert variant="success" className="flex h-full flex-row items-center">
+                        <div className="flex flex-col gap-2">
+                            <Alert variant="success" className="flex h-full flex-row items-center mt-2 mb-2">
                                 <CircleCheck className={'size-6! translate-y-0!'} />
                                 <div>
                                     <AlertTitle>Connection Active</AlertTitle>
                                     <AlertDescription>Your Trading212 account is successfully linked.</AlertDescription>
                                 </div>
                             </Alert>
-                        </>
+
+                            {investments?.map((investment) => (
+                                <p key={investment.id}>
+                                    <span className="font-semibold">{investment.name}</span> - {investment.current_value} {investment.currency}
+                                </p>
+                            ))}
+                        </div>
                     )}
                 </CardDescription>
             </Card>

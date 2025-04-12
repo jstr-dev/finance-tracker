@@ -27,8 +27,6 @@ class SyncTrading212Data implements ShouldQueue
         $this->conn->setMeta('initial_sync', true);
         $this->conn->load('metas');
 
-        sleep(3);
-
         event(new Trading212SyncComplete($this->conn));
     }
 }
