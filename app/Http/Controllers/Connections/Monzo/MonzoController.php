@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Connections\Monzo;
 
 use App\Http\Controllers\Controller;
 use App\Models\UserConnection;
+use App\Services\MonzoService;
 use App\Services\Trading212Service;
 use DB;
 use Illuminate\Validation\Rule;
@@ -21,4 +22,6 @@ class MonzoController extends Controller
 
         return Inertia::render('connections/monzo', compact('connection'));
     }
+
+
 }
