@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem, SharedData, UserConnection } from '@/types';
+import { BreadcrumbItem, SharedData, UserConnection, UserInvestment } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
+import { AlertCircle, CircleCheck, CircleCheckBig } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -26,7 +27,15 @@ interface TokenValidationErrors {
     token?: string;
 }
 
-export default function Trading212({ connection, errors }: { connection: UserConnection | null; errors: TokenValidationErrors }) {
+export default function Trading212({
+    connection,
+    investments,
+    errors,
+}: {
+    connection: UserConnection | null;
+    errors: TokenValidationErrors;
+    investments?: UserInvestment[]; //TODO: type
+}) {
     const { auth } = usePage<SharedData>().props;
 
     useEffect(() => {
@@ -85,22 +94,30 @@ export default function Trading212({ connection, errors }: { connection: UserCon
         );
     };
 
-    const ActivePanel = () => {
-        return (
-            <>
-                <Card className="gap-2 py-4 pb-8">
-                    <CardHeader className="px-4 pb-0">
-                        <CardTitle className="text-sm">Your Account</CardTitle>
-                    </CardHeader>
-                    <CardDescription>
-                        {connection?.metas.find((m) => m.key === 'initial_sync')?.value === 'false' && (
-                            <Loader title="Fetching account information" hint="This may take a while, grab a coffee!" />
-                        )}
-                    </CardDescription>
-                </Card>
-            </>
-        );
-    };
+    const ActivePanel = () => (
+        <>
+            <Card className="gap-2 py-4 pb-8">
+                <CardHeader className="px-4 pb-0">
+                    <CardTitle className="text-sm">Your Account</CardTitle>
+                </CardHeader>
+                <CardDescription className="px-4 py-2">
+                    {connection?.metas.find((m) => m.key === 'initial_sync')?.value === 'false' ? (
+                        <Loader title="Fetching account information" hint="This may take a while, grab a coffee!" />
+                    ) : (
+                        <>
+                            <Alert variant="success" className="flex h-full flex-row items-center">
+                                <CircleCheck className={'size-6! translate-y-0!'} />
+                                <div>
+                                    <AlertTitle>Connection Active</AlertTitle>
+                                    <AlertDescription>Your Trading212 account is successfully linked.</AlertDescription>
+                                </div>
+                            </Alert>
+                        </>
+                    )}
+                </CardDescription>
+            </Card>
+        </>
+    );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

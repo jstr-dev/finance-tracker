@@ -20,7 +20,9 @@ class Trading212Controller extends Controller
             ->with(['metas' => fn ($q) => $q->where('key', 'initial_sync')])
             ->first();
 
-        return Inertia::render('connections/trading212', compact('connection'));
+        $investments = $connection?->getInvestments();
+
+        return Inertia::render('connections/trading212', compact('connection', 'investments'));
     }
 
     public function store(Trading212Service $service)

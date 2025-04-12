@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\UserConnectionMeta;
+use DB;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -54,6 +55,22 @@ class UserConnection extends Model
     public function hasMeta(string $key): bool
     {
         return $this->metas->where('key', '=', $key)->exists();
+    }
+
+    public function investments(): HasMany
+    {
+        return $this->hasMany(UserInvestment::class, 'connection_id');
+    }
+
+    public function getInvestments()
+    {
+        $maxSyncAt = $this->investments()->select(DB::raw('MAX(synced_at) as synced_at'))->value('synced_at');
+
+        if (!$maxSyncAt) {
+            return collect();
+        }
+
+        return $this->investments()->where('synced_at', '=', $maxSyncAt)->get();
     }
 }
 

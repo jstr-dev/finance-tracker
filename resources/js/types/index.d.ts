@@ -58,3 +58,17 @@ export interface UserConnectionMeta {
     key: string;
     value: any;
 }
+
+export interface UserInvestment {
+    id: int;
+    user_id: int;
+    connection_id: int;
+    ticker: string;
+    name?: string;
+    amount: float;
+    currency: string;
+    synced_at: string;
+    average_price: float;
+    current_price: float;
+    current_value: float;
+}
