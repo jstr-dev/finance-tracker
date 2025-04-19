@@ -1,4 +1,5 @@
 import ConnectionDetailsCard from '@/components/custom/connection-details-card';
+import TabSideNav, { Tab } from '@/components/custom/side-nav/tab-side-nav';
 import Loader from '@/components/loader';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -34,7 +35,7 @@ export default function Trading212({
 }: {
     connection: UserConnection | null;
     errors: TokenValidationErrors;
-    investments?: UserInvestment[]; //TODO: type
+    investments?: UserInvestment[];
 }) {
     const { auth } = usePage<SharedData>().props;
 
@@ -47,6 +48,14 @@ export default function Trading212({
             window.Echo.private('user.' + auth.user.id).stopListening('Trading212SyncComplete');
         };
     }, []);
+
+    const OverviewTab = () => {
+        return 'hi';
+    }
+
+    const tabs = [
+        { key: 'Overview', content: <OverviewTab /> },
+    ] as Tab[];
 
     const InactivePanel = () => {
         const [token, setToken] = useState<string>('');
@@ -113,11 +122,13 @@ export default function Trading212({
                                 </div>
                             </Alert>
 
-                            {investments?.map((investment) => (
+                            {/* {investments?.map((investment) => (
                                 <p key={investment.id}>
                                     <span className="font-semibold">{investment.name}</span> - {investment.current_value} {investment.currency}
                                 </p>
-                            ))}
+                            ))} */}
+
+                            <TabSideNav tabs={tabs} selectedTab={'Overview'} />
                         </div>
                     )}
                 </CardDescription>

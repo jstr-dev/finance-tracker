@@ -15,7 +15,7 @@ function ConnectionDetailsCard({ imageName, heading, children }: ConnectionDetai
                 <img src={`/storage/assets/logos/${imageName}`} className="ml-2 h-8 w-8 rounded-md" />
                 <span className="dark:text-white">{heading}</span>
             </CardTitle>
-            <CardContent className="rounded-r-2xl text-xs w-full text-primary p-4 flex flex-col gap-2">
+            <CardContent className="rounded-r-2xl text-sm w-full text-primary p-4 flex flex-col gap-2">
                 {children}
             </CardContent>
         </CardHeader>
