@@ -105,7 +105,7 @@ export default function Trading212({
                         <Loader title="Fetching account information" hint="This may take a while, grab a coffee!" />
                     ) : (
                         <div className="flex flex-col gap-2">
-                            <Alert variant="success" className="flex h-full flex-row items-center mt-2 mb-2">
+                            <Alert variant="success" className="flex h-full flex-row items-center mt-2 mb-2 ">
                                 <CircleCheck className={'size-6! translate-y-0!'} />
                                 <div>
                                     <AlertTitle>Connection Active</AlertTitle>

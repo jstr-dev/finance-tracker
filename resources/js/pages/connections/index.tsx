@@ -1,7 +1,9 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import { BreadcrumbItem, Connection, UserConnection } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
@@ -18,7 +20,7 @@ interface ConnectionsProps {
     userConnections: string[];
 }
 
-function ConnectionCard({ connection, userConnections }: { connection: Connection, userConnections: string[] }) {
+function ConnectionCard({ connection, isActive}: { connection: Connection, isActive: boolean }) {
     const onClick = () => {
         router.visit('/connections/' + connection.id, {method: 'get'});
     }
@@ -28,22 +30,22 @@ function ConnectionCard({ connection, userConnections }: { connection: Connectio
         router.prefetch('/connections/' + connection.id, {method: 'get'}, {cacheFor: '1m'});
     }
 
-    const isActiveConn = (connectionId: string) => {
-        return userConnections.filter(uc => uc === connectionId).length > 0;
-    }
-
     return (
-        <Card className="h-full p-4 gap-4">
+        <Card className={cn("h-full p-4 gap-4", 
+            isActive && 'border-green-200'
+        )}>
             <CardHeader className="p-0">
-                <img src={connection.image}
-                    className="h-8 w-8 rounded-md mb-2" />
+                <div className='flex flex-row justify-between items-start'>
+                    <img src={connection.image} className="h-8 w-8 rounded-md mb-2" />
+                    {isActive && <Badge variant={"success"} className="h-6">Active</Badge>}
+                </div>
                 <CardTitle className="text-sm">{connection.name}</CardTitle>
                 <CardDescription className="text-xs">{connection.description}</CardDescription>
             </CardHeader>
             <CardFooter className="p-0 w-full flex flex-row items-end h-full">
                 <div className="w-full flex flex-row">
                     <Button className="w-16 text-xs hover:cursor-pointer" variant="outline" size="sm"
-                        onClick={onClick} onMouseEnter={onHover}>{isActiveConn(connection.id) ? 'Manage' : 'Connect'}</Button>
+                        onClick={onClick} onMouseEnter={onHover}>{isActive ? 'Manage' : 'Connect'}</Button>
                 </div>
             </CardFooter>
         </Card>
@@ -52,6 +54,13 @@ function ConnectionCard({ connection, userConnections }: { connection: Connectio
 
 export default function Connections({ connections, userConnections }: ConnectionsProps) {
     const [search, setSearch] = useState<string>('');
+
+    /**
+     * TODO: make this faster. (cache active)
+     */
+    const isActiveConn = (connectionId: string) => {
+        return userConnections.filter(uc => uc === connectionId).length > 0;
+    }
 
     // TODO: remove
     if (false) {
@@ -73,6 +82,7 @@ export default function Connections({ connections, userConnections }: Connection
     }
 
     connections = connections.filter((connection: Connection) => connection.name.toLowerCase().includes(search.toLowerCase()));
+    connections = connections.sort((a, b) => !isActiveConn(a.id) ? 1 : 0)
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -90,7 +100,7 @@ export default function Connections({ connections, userConnections }: Connection
                 <div className="grid w-full gap-4 grid-cols-3 max-[1200px]:grid-cols-3 max-[1050px]:grid-cols-2 max-[600px]:grid-cols-1 auto-rows-max">
                     {connections.map((connection: Connection) => (
                         <div key={connection.id}>
-                            <ConnectionCard connection={connection} userConnections={userConnections} />
+                            <ConnectionCard connection={connection} isActive={isActiveConn(connection.id)} />
                         </div>
                     ))}
                 </div>
