@@ -93,11 +93,13 @@ export default function Connections({
     const handleCloseDrawer = () => {
         setDrawerOpen(false);
 
-        router.visit(route('connections.index'), {
-            only: ['connectionDrawerProps'],
-            preserveScroll: true,
-            preserveState: true,
-        });
+        setTimeout(() => {
+            router.visit(route('connections.index'), {
+                only: ['connectionDrawerProps'],
+                preserveScroll: true,
+                preserveState: true,
+            });
+        }, 300);
     };
 
     const connections = initialConnections

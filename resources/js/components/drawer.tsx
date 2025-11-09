@@ -17,23 +17,24 @@ export default function Drawer({ isOpen, setIsOpen, children }: DrawerProps) {
 
   return (
     <>
+      {/* Overlay */}
       <div
         className={cn(
-          "fixed inset-0 bg-black bg-opacity-40 transition-opacity",
-          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          "fixed inset-0 bg-gray-900/30 transition-opacity duration-300 ease-in-out",
+          isOpen ? "opacity-20 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
+        style={{ zIndex: 99 }}
         onClick={() => setIsOpen(false)}
-      ></div>
+      />
 
+      {/* Drawer */}
       <div
         className={cn(
-          "fixed top-0 right-0 h-full bg-white shadow-lg transition-all duration-300 ease-in-out overflow-y-auto",
-          isOpen
-            ? "w-1/3 max-sm:w-full max-w-[650px]"
-            : "w-0"
+          "fixed top-[5px] right-[5px] h-[calc(100vh-10px)] w-full sm:w-[450px] max-w-[650px] bg-background shadow-lg transform transition-transform duration-300 ease-in-out rounded-xl border-2 border-background z-100 flex flex-col",
+          isOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
-        <div className="p-6">{children}</div>
+        <div className="flex-1 overflow-y-auto p-6">{children}</div>
       </div>
     </>
   );

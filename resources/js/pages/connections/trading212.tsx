@@ -7,13 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SharedData, UserConnection, UserInvestment } from '@/types';
 import {  router, usePage } from '@inertiajs/react';
-import { CircleCheck} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ConnectionDrawerProps } from '.';
-
-interface TokenValidationErrors {
-    token?: string;
-}
 
 export default function Trading212({
     connections
