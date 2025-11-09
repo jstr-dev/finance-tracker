@@ -52,6 +52,14 @@ export default function Connections({ connections, userConnections }: Connection
         return userConnections.filter(uc => uc === connectionId).length > 0;
     }
 
+    const visitConnection = (connection: Connection) => {
+        router.visit(route('connections.index', { connection: connection.id }), {
+            only: ['connectionDrawerProps'],
+            preserveScroll: true,
+            preserveState: true,
+        })
+    }
+
     connections = connections.filter((connection: Connection) => connection.name.toLowerCase().includes(search.toLowerCase()));
     connections = connections.sort((a, b) => !isActiveConn(a.id) ? 1 : 0)
 
@@ -73,14 +81,14 @@ export default function Connections({ connections, userConnections }: Connection
                     {connections.map((connection: Connection) => (
                         <div key={connection.id}>
                             <ConnectionCard connection={connection} isActive={isActiveConn(connection.id)}
-                                onClick={() => { setDrawerOpen(true) }} />
+                                onClick={() => { visitConnection(connection) }} />
                         </div>
                     ))}
                 </div>
             </div>
 
             <Drawer isOpen={drawerOpen} setIsOpen={setDrawerOpen}>
-                <Trading212 connection={null} investments={undefined} errors={{}} />
+                {/* <Trading212 connection={null} investments={undefined} errors={{}} /> */}
             </Drawer>
         </AppLayout>
     );

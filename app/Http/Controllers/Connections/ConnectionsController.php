@@ -20,11 +20,10 @@ class ConnectionsController extends Controller
             ->distinct('connection_type')
             ->pluck('connection_type');
 
-        return Inertia::render('connections/index', compact('connections', 'userConnections'));
-    }
-
-    public function show(Connection $connection)
-    {
-        return Inertia::render('connections/show', compact('connection'));
+        return Inertia::render('connections/index', [
+            'connections' => $connections,
+            'userConnections' => $userConnections,
+            'connectionDrawerProps' => Inertia::lazy(fn() => []),
+        ]);
     }
 }
