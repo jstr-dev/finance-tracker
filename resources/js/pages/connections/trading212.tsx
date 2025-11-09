@@ -1,28 +1,14 @@
 import ConnectionDetailsCard from '@/components/custom/connection-details-card';
-import TabSideNav, { Tab } from '@/components/custom/side-nav/tab-side-nav';
 import Loader from '@/components/loader';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem, SharedData, UserConnection, UserInvestment } from '@/types';
-import { Head, router, usePage } from '@inertiajs/react';
-import { AlertCircle, CircleCheck, CircleCheckBig } from 'lucide-react';
+import { SharedData, UserConnection, UserInvestment } from '@/types';
+import {  router, usePage } from '@inertiajs/react';
+import { CircleCheck} from 'lucide-react';
 import { useEffect, useState } from 'react';
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Connections',
-        href: '/connections',
-    },
-
-    {
-        title: 'Trading212',
-        href: '/connections/trading212',
-    },
-];
 
 interface TokenValidationErrors {
     token?: string;
@@ -48,14 +34,6 @@ export default function Trading212({
             window.Echo.private('user.' + auth.user.id).stopListening('Trading212SyncComplete');
         };
     }, []);
-
-    const OverviewTab = () => {
-        return 'hi';
-    }
-
-    const tabs = [
-        { key: 'Overview', content: <OverviewTab /> },
-    ] as Tab[];
 
     const InactivePanel = () => {
         const [token, setToken] = useState<string>('');
@@ -121,14 +99,6 @@ export default function Trading212({
                                     <AlertDescription>Your Trading212 account is successfully linked.</AlertDescription>
                                 </div>
                             </Alert>
-
-                            {/* {investments?.map((investment) => (
-                                <p key={investment.id}>
-                                    <span className="font-semibold">{investment.name}</span> - {investment.current_value} {investment.currency}
-                                </p>
-                            ))} */}
-
-                            <TabSideNav tabs={tabs} selectedTab={'Overview'} />
                         </div>
                     )}
                 </CardDescription>
@@ -137,18 +107,15 @@ export default function Trading212({
     );
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Trading212" />
-            <div className="container mx-auto flex w-full max-w-4xl flex-col gap-4 p-4">
-                <ConnectionDetailsCard imageName="trading212.png" heading="Trading212">
-                    <p>This connection allows you to connect your Trading 212 account with our platform.</p>
-                    <p>
-                        By connecting Trading 212 you will be able to see your investments within our platform and use them to track a more accurate
-                        picture of your net worth
-                    </p>
-                </ConnectionDetailsCard>
-                {connection ? <ActivePanel /> : <InactivePanel />}
-            </div>
-        </AppLayout>
+        <div className="flex flex-col w-full">
+            <ConnectionDetailsCard imageName="trading212.png" heading="Trading212">
+                <p>This connection allows you to connect your Trading 212 account with our platform.</p>
+                <p>
+                    By connecting Trading 212 you will be able to see your investments within our platform and use them to track a more accurate
+                    picture of your net worth
+                </p>
+            </ConnectionDetailsCard>
+            {connection ? <ActivePanel /> : <InactivePanel />}
+        </div>
     );
 }

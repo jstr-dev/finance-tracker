@@ -1,4 +1,4 @@
-import { Badge } from '@/components/ui/badge';
+import Drawer from '@/components/drawer';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { BreadcrumbItem, Connection, UserConnection } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
+import Trading212 from './trading212';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -20,14 +21,8 @@ interface ConnectionsProps {
     userConnections: string[];
 }
 
-function ConnectionCard({ connection, isActive}: { connection: Connection, isActive: boolean }) {
-    const onClick = () => {
-        router.visit('/connections/' + connection.id, {method: 'get'});
-    }
-
+function ConnectionCard({ connection, isActive, onClick }: { connection: Connection, isActive: boolean, onClick: () => void }) {
     const onHover = () => {
-        if (!connection.access) return;
-        router.prefetch('/connections/' + connection.id, {method: 'get'}, {cacheFor: '1m'});
     }
 
     return (
@@ -51,6 +46,7 @@ function ConnectionCard({ connection, isActive}: { connection: Connection, isAct
 
 export default function Connections({ connections, userConnections }: ConnectionsProps) {
     const [search, setSearch] = useState<string>('');
+    const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
 
     const isActiveConn = (connectionId: string) => {
         return userConnections.filter(uc => uc === connectionId).length > 0;
@@ -76,11 +72,16 @@ export default function Connections({ connections, userConnections }: Connection
                 <div className="w-full gap-2 flex flex-col max-h-[80vh] overflow-y-auto">
                     {connections.map((connection: Connection) => (
                         <div key={connection.id}>
-                            <ConnectionCard connection={connection} isActive={isActiveConn(connection.id)} />
+                            <ConnectionCard connection={connection} isActive={isActiveConn(connection.id)}
+                                onClick={() => { setDrawerOpen(true) }} />
                         </div>
                     ))}
                 </div>
             </div>
+
+            <Drawer isOpen={drawerOpen} setIsOpen={setDrawerOpen}>
+                <Trading212 connection={null} investments={undefined} errors={{}} />
+            </Drawer>
         </AppLayout>
     );
 }
