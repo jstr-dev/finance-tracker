@@ -9,20 +9,15 @@ import { SharedData, UserConnection, UserInvestment } from '@/types';
 import {  router, usePage } from '@inertiajs/react';
 import { CircleCheck} from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { ConnectionDrawerProps } from '.';
 
 interface TokenValidationErrors {
     token?: string;
 }
 
 export default function Trading212({
-    connection,
-    investments,
-    errors,
-}: {
-    connection: UserConnection | null;
-    errors: TokenValidationErrors;
-    investments?: UserInvestment[];
-}) {
+    connections
+}: ConnectionDrawerProps) {
     const { auth } = usePage<SharedData>().props;
 
     useEffect(() => {
@@ -50,11 +45,11 @@ export default function Trading212({
             router.post('/connections/trading212', { token: token });
         };
 
-        useEffect(() => {
-            if (errors.token) {
-                setTokenError(errors.token);
-            }
-        }, []);
+        // useEffect(() => {
+        //     if (errors.token) {
+        //         setTokenError(errors.token);
+        //     }
+        // }, []);
 
         return (
             <>
@@ -88,7 +83,7 @@ export default function Trading212({
                     <CardTitle className="text-sm">Your Account</CardTitle>
                 </CardHeader>
                 <CardDescription className="px-4">
-                    {connection?.metas.find((m) => m.key === 'initial_sync')?.value === 'false' ? (
+                    {/* {connection?.metas.find((m) => m.key === 'initial_sync')?.value === 'false' ? (
                         <Loader title="Fetching account information" hint="This may take a while, grab a coffee!" />
                     ) : (
                         <div className="flex flex-col gap-2">
@@ -100,7 +95,7 @@ export default function Trading212({
                                 </div>
                             </Alert>
                         </div>
-                    )}
+                    )} */}
                 </CardDescription>
             </Card>
         </>
@@ -115,7 +110,7 @@ export default function Trading212({
                     picture of your net worth
                 </p>
             </ConnectionDetailsCard>
-            {connection ? <ActivePanel /> : <InactivePanel />}
+            {/* {connection ? <ActivePanel /> : <InactivePanel />} */}
         </div>
     );
 }
