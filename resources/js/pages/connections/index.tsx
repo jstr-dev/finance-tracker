@@ -1,4 +1,4 @@
-import Drawer from '@/components/drawer';
+import Drawer, { DrawerCloseButton} from '@/components/drawer';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,7 @@ import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { BreadcrumbItem, Connection } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import Trading212 from './trading212';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -141,6 +141,7 @@ export default function Connections({
             </div>
 
             <Drawer isOpen={drawerOpen} setIsOpen={handleCloseDrawer}>
+                <DrawerCloseButton setIsOpen={handleCloseDrawer}/>
                 {DrawerComponent ? (
                     <DrawerComponent {...connectionDrawerProps} />
                 ) : (

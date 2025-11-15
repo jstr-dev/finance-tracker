@@ -9,6 +9,7 @@ import { SharedData, UserConnection, UserInvestment } from '@/types';
 import {  router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { ConnectionDrawerProps } from '.';
+import DottedLine from '@/components/dottedline';
 
 export default function Trading212({
     connections
@@ -47,27 +48,23 @@ export default function Trading212({
         // }, []);
 
         return (
-            <>
-                <Card className="py-4">
-                    <CardHeader className="px-4 pb-0">
-                        <CardTitle className="text-sm">Add a new connection</CardTitle>
-                        <CardDescription className="text-xs">Connect a new Trading212 account by entering your API Token below.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="px-4 py-0">
-                        <form className="flex flex-col gap-6" onSubmit={onSubmit}>
-                            <div className="flex flex-col space-y-2">
-                                <Label htmlFor="token">API Token</Label>
-                                <Input name="token" placeholder="Enter your token..." value={token} onChange={(e) => setToken(e.target.value)} />
-                                {tokenError && <p className="text-xs text-red-600">{tokenError}</p>}
-                            </div>
+            <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-2">
+                    <div className="font-semibold">Add a new connection</div>
+                    <div className="text-sm text-muted-foreground">Connect a new Trading212 account by entering your API Token below.</div>
+                </div>
+                <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+                    <div className="flex flex-col space-y-2">
+                        <Label htmlFor="token">API Token</Label>
+                        <Input name="token" placeholder="Enter your token..." value={token} onChange={(e) => setToken(e.target.value)} />
+                        {tokenError && <p className="text-xs text-red-600">{tokenError}</p>}
+                    </div>
 
-                            <Button type="submit" className="hover:cursor-pointer">
-                                Add Connection
-                            </Button>
-                        </form>
-                    </CardContent>
-                </Card>
-            </>
+                    <Button type="submit" className="hover:cursor-pointer">
+                        Add Connection
+                    </Button>
+                </form>
+            </div>
         );
     };
 
@@ -97,14 +94,12 @@ export default function Trading212({
     );
 
     return (
-        <div className="flex flex-col w-full">
+        <div className="flex flex-col w-full gap-6">
             <ConnectionDetailsCard imageName="trading212.png" heading="Trading212">
-                <p>This connection allows you to connect your Trading 212 account with our platform.</p>
-                <p>
-                    By connecting Trading 212 you will be able to see your investments within our platform and use them to track a more accurate
-                    picture of your net worth
-                </p>
+                Track your investments within the platform, creating a more accurate picture of your net worth.
             </ConnectionDetailsCard>
+            <DottedLine />
+            <InactivePanel />
             {/* {connection ? <ActivePanel /> : <InactivePanel />} */}
         </div>
     );

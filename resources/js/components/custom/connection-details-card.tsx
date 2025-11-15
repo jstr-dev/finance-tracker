@@ -8,25 +8,16 @@ interface ConnectionDetailsCardProps {
 
 function ConnectionDetailsCard({ imageName, heading, children }: ConnectionDetailsCardProps)
 {
-    return <div>
-        <div className="flex flex-row items-center gap-2">
+    return <div className="flex flex-col gap-6">
+        <div className="flex flex-row items-center gap-4">
             <img src={`/storage/assets/logos/${imageName}`} className="ml-2 h-8 w-8 rounded-md"></img>
-            <h2 className="dark:text-white">{heading}</h2>
+            <h2 className="text-foreground font-medium">Settings</h2>
+        </div>
+        <div className="flex flex-col gap-2">
+            <h2 className="text-foreground font-semibold">{heading}</h2>
+            <div className="text-sm text-muted-foreground">{children}</div>
         </div>
     </div>
-
-    // <Card className="p-0 text-secondary">
-    //     <CardHeader className="p-0 flex flex-row max-sm:flex-col">
-    //         <CardTitle className={'text-md flex flex-row items-center gap-4 w-80' +
-    //             ' bg-secondary-foreground dark:bg-muted sm:rounded-l-md max-sm:rounded-t-md p-4 max-sm:w-full'}>
-    //             <img src={`/storage/assets/logos/${imageName}`} className="ml-2 h-8 w-8 rounded-md" />
-    //             <span className="dark:text-white">{heading}</span>
-    //         </CardTitle>
-    //         <CardContent className="rounded-r-2xl text-sm w-full text-primary p-4 flex flex-col gap-2">
-    //             {children}
-    //         </CardContent>
-    //     </CardHeader>
-    // </Card>
 }
 
 export default ConnectionDetailsCard
