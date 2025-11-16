@@ -1,8 +1,6 @@
 import ConnectionDetailsCard from '@/components/custom/connection-details-card';
-import Loader from '@/components/loader';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SharedData, UserConnection, UserInvestment } from '@/types';
@@ -29,6 +27,13 @@ export default function Trading212({
     const InactivePanel = () => {
         const [token, setToken] = useState<string>('');
         const [tokenError, setTokenError] = useState<string>('');
+        const errors = usePage<SharedData>().props.errors;
+
+        useEffect(() => {
+            if (errors.token) {
+                setTokenError(errors.token);
+            }
+        }, [errors]);
 
         const onSubmit = (e: React.FormEvent) => {
             e.preventDefault();
@@ -40,12 +45,6 @@ export default function Trading212({
 
             router.post('/connections/trading212', { token: token });
         };
-
-        // useEffect(() => {
-        //     if (errors.token) {
-        //         setTokenError(errors.token);
-        //     }
-        // }, []);
 
         return (
             <div className="flex flex-col gap-6">
