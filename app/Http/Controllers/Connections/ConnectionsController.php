@@ -23,28 +23,26 @@ class ConnectionsController extends Controller
         return Inertia::render('connections/index', [
             'connections' => $connections,
             'userConnections' => $userConnections,
-            'connectionDrawerProps' => $this->getConnectionProp(),
+            'connectionDrawerProps' => request()->has('connection') ? $this->getConnectionProp() : Inertia::lazy(fn() => $this->getConnectionProp()),
         ]);
     }
 
     private function getConnectionProp()
     {
-        return Inertia::lazy(function () {
-            $connectionType = request()->get('connection');
+        $connectionType = request()->get('connection');
 
-            if (!$connectionType) {
-                return null;
-            }
+        if (!$connectionType) {
+            return null;
+        }
 
-            $connections = request()->user()
-                ->connections()
-                ->where('connection_type', $connectionType)
-                ->get();
+        $connections = request()->user()
+            ->connections()
+            ->where('connection_type', $connectionType)
+            ->get();
 
-            return [
-                'type' => $connectionType,
-                'connections' => $connections,
-            ];
-        });       
+        return [
+            'type' => $connectionType,
+            'connections' => $connections,
+        ];
     }
 }

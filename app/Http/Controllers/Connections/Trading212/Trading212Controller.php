@@ -8,23 +8,9 @@ use App\Models\UserConnection;
 use App\Services\Trading212Service;
 use DB;
 use Illuminate\Validation\Rule;
-use Inertia\Inertia;
 
 class Trading212Controller extends Controller
 {
-    public function index()
-    {
-        $connection = auth()->user()
-            ->connections()
-            ->scopes(['trading212'])
-            ->with(['metas' => fn ($q) => $q->where('key', 'initial_sync')])
-            ->first();
-
-        $investments = $connection?->getInvestments();
-
-        return Inertia::render('connections/trading212', compact('connection', 'investments'));
-    }
-
     public function store(Trading212Service $service)
     {
         $existingTokens = auth()->user()->connections()->scopes('trading212')->pluck('access_token')->toArray();

@@ -79,6 +79,8 @@ export default function Connections({
         }
     }, [connectionDrawerProps]);
 
+    console.log('RENDER', connectionDrawerProps);
+
     const isActiveConn = (connectionId: string) =>
         userConnections.includes(connectionId);
 
