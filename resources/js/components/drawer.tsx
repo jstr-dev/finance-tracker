@@ -20,8 +20,8 @@ export default function Drawer({ isOpen, setIsOpen, children }: DrawerProps) {
       {/* Overlay */}
       <div
         className={cn(
-            "fixed inset-0 bg-black transition-opacity duration-300 ease-in-out",
-            isOpen ? "opacity-60 pointer-events-auto" : "opacity-0 pointer-events-none"
+            "overlay",
+            isOpen && "active"
         )}
         style={{ zIndex: 99 }}
         onClick={() => setIsOpen(false)}
