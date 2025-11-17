@@ -51,6 +51,8 @@ export interface Connection {
 
 export interface UserConnection {
     user_id: int;
+    first_synced_at: string;
+    status: "active" | "inactive" | "pending";
     metas: UserConnectionMeta[];
 }
 

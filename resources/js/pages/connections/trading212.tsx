@@ -5,18 +5,26 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SharedData, UserConnection, UserInvestment } from '@/types';
 import {  router, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ConnectionDrawerProps } from '.';
 import DottedLine from '@/components/dottedline';
+import Loader from '@/components/loader';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { CircleCheck } from 'lucide-react';
 
 export default function Trading212({
     connections
 }: ConnectionDrawerProps) {
     const { auth } = usePage<SharedData>().props;
 
+    let connection: UserConnection | null = null;
+    if (connections && connections.length > 0) {
+        connection = connections[0];
+    }
+
     useEffect(() => {
         window.Echo.private('user.' + auth.user.id).listen('Trading212SyncComplete', (data: any) => {
-            router.visit('/connections/trading212', { method: 'get' });
+            router.reload({ only: ['connectionDrawerProps'] });
         });
 
         return () => {
@@ -29,7 +37,7 @@ export default function Trading212({
         const [tokenError, setTokenError] = useState<string>('');
         const errors = usePage<SharedData>().props.errors;
 
-        useEffect(() => {
+        useMemo(() => {
             if (errors.token) {
                 setTokenError(errors.token);
             }
@@ -67,30 +75,16 @@ export default function Trading212({
         );
     };
 
-    const ActivePanel = () => (
-        <>
-            <Card className="gap-2 py-4 pb-8">
-                <CardHeader className="px-4 pb-0">
-                    <CardTitle className="text-sm">Your Account</CardTitle>
-                </CardHeader>
-                <CardDescription className="px-4">
-                    {/* {connection?.metas.find((m) => m.key === 'initial_sync')?.value === 'false' ? (
-                        <Loader title="Fetching account information" hint="This may take a while, grab a coffee!" />
-                    ) : (
-                        <div className="flex flex-col gap-2">
-                            <Alert variant="success" className="flex h-full flex-row items-center mt-2 mb-2 ">
-                                <CircleCheck className={'size-6! translate-y-0!'} />
-                                <div>
-                                    <AlertTitle>Connection Active</AlertTitle>
-                                    <AlertDescription>Your Trading212 account is successfully linked.</AlertDescription>
-                                </div>
-                            </Alert>
-                        </div>
-                    )} */}
-                </CardDescription>
-            </Card>
-        </>
-    );
+    const ActivePanel = ({ conn }: { conn: UserConnection }) => {
+        return <div className="flex flex-col gap-6">
+            {conn.status == 'pending' ? <Loader title="Fetching your data..." hint="We are pulling in all of your investments, please wait." /> :
+                <div className="flex flex-col gap-2">
+                    <div className="font-semibold">Your Account</div>
+                    <div className="text-sm text-muted-foreground">Something here</div>
+                </div>
+            }
+        </div>
+    };
 
     return (
         <div className="flex flex-col w-full gap-6">
@@ -98,8 +92,7 @@ export default function Trading212({
                 Track your investments within the platform, creating a more accurate picture of your net worth.
             </ConnectionDetailsCard>
             <DottedLine />
-            <InactivePanel />
-            {/* {connection ? <ActivePanel /> : <InactivePanel />} */}
+            {connection ? <ActivePanel conn={connection} /> : <InactivePanel />}
         </div>
     );
 }

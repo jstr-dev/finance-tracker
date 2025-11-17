@@ -4,7 +4,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/ca
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import { BreadcrumbItem, Connection } from '@/types';
+import { BreadcrumbItem, Connection, UserConnection } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import Trading212 from './trading212';
@@ -15,7 +15,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export interface ConnectionDrawerProps {
     type?: string;
-    connections?: any[];
+    connections?: UserConnection[];
 }
 
 interface ConnectionsProps {

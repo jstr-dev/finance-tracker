@@ -24,8 +24,9 @@ class SyncTrading212Data implements ShouldQueue
         $service = new Trading212Service();
         $service->sync($this->conn);
 
-        $this->conn->setMeta('initial_sync', true);
-        $this->conn->load('metas');
+        $this->conn->status = 'active';
+        $this->conn->first_sync_at = now();
+        $this->conn->save();
 
         event(new Trading212SyncComplete($this->conn));
     }

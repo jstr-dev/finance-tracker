@@ -32,15 +32,12 @@ class Trading212Controller extends Controller
             $connection->last_4_of_token = substr(request('token'), -4);
 
             $connection->save();
-            $connection->setMeta('initial_sync', false);
 
             return $connection;
         });
 
         SyncTrading212Data::dispatch($connection);
 
-        return to_route('trading212.index')->with([
-            'success' => 'Trading212 connection created successfully'
-        ]);
+        return back(); 
     }
 }
