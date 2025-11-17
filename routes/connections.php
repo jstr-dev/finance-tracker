@@ -9,8 +9,8 @@ Route::group(['controller' => ConnectionsController::class, 'prefix' => 'connect
     Route::get('', 'index')->name('connections.index');
 
     Route::group(['prefix' => 'trading212', 'controller' => Trading212Controller::class, 'middleware' => 'can:trading212'], function () {
-        Route::get('', 'index')->name('trading212.index');
         Route::post('', 'store')->name('trading212.store');
+        Route::delete('/{connection}', 'destroy')->name('trading212.destroy');
     });
 
     Route::group(['prefix' => 'monzo', 'controller' => MonzoController::class, 'middleware' => 'can:monzo'], function () {

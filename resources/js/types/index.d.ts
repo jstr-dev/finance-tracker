@@ -50,10 +50,13 @@ export interface Connection {
 }
 
 export interface UserConnection {
+    id: int
     user_id: int;
     first_synced_at: string;
     status: "active" | "inactive" | "pending";
     metas: UserConnectionMeta[];
+    last_4_of_token: ?string;
+    token_length: int;
 }
 
 export interface UserConnectionMeta {

@@ -30,8 +30,8 @@ export default function Drawer({ isOpen, setIsOpen, children }: DrawerProps) {
       {/* Drawer */}
       <div
         className={cn(
-            "fixed top-[5px] right-[5px] h-[calc(100vh-10px)] w-full sm:w-[450px] max-w-[650px]",
-            "bg-drawer shadow-lg transform transition-transform duration-300 ease-in-out rounded-xl border-2 border-background z-100 flex flex-col",
+            "fixed top-0 right-0 h-full w-full sm:w-[400px] max-w-[400px]",
+            "bg-drawer shadow-lg transform transition-transform duration-300 ease-in-out border-l-1 border-muted-foreground z-99 flex flex-col",
           isOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
@@ -44,7 +44,7 @@ export default function Drawer({ isOpen, setIsOpen, children }: DrawerProps) {
 export function DrawerCloseButton({ setIsOpen }: { setIsOpen: (open: boolean) => void }) {
     return (
         <div
-            className={cn("absolute top-2 right-2 z-100",
+            className={cn("absolute top-6 right-4 z-100",
                 "flex h-8 w-8 items-center justify-center rounded-full",
                 "hover:bg-drawer-foreground/5 cursor-pointer text-foreground/60")}
             onClick={() => setIsOpen(false)}
@@ -52,4 +52,10 @@ export function DrawerCloseButton({ setIsOpen }: { setIsOpen: (open: boolean) =>
             <span aria-hidden="true" className="text-3xl">&times;</span>
         </div>
     );
+}
+
+export function DrawerFooter({ children, className }: { children: ReactNode, className?: string }) {
+    return <div className={cn("flex flex-col", className)}>
+        {children}
+    </div>
 }

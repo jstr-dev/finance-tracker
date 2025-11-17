@@ -1,4 +1,4 @@
-import ConnectionDetailsCard from '@/components/custom/connection-details-card';
+import ConnectionDetailsCard from '@/components/custom/connection-drawer-header';
 import Loader from '@/components/loader';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';

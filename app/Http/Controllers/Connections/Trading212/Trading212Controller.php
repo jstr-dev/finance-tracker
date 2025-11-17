@@ -11,6 +11,17 @@ use Illuminate\Validation\Rule;
 
 class Trading212Controller extends Controller
 {
+    public function destroy(UserConnection $connection)
+    {
+        if ($connection->user_id !== auth()->user()->id) {
+            abort(403);
+        }
+        
+        $connection->delete();
+
+        return back();
+    }
+
     public function store(Trading212Service $service)
     {
         $existingTokens = auth()->user()->connections()->scopes('trading212')->pluck('access_token')->toArray();
@@ -30,7 +41,7 @@ class Trading212Controller extends Controller
             $connection->access_token = encrypt(request('token'));
             $connection->user_id = auth()->id();
             $connection->last_4_of_token = substr(request('token'), -4);
-
+            $connection->token_length = strlen(request('token'));
             $connection->save();
 
             return $connection;
