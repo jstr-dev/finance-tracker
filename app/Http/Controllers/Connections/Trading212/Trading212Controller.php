@@ -24,24 +24,30 @@ class Trading212Controller extends Controller
 
     public function store(Trading212Service $service)
     {
-        $existingTokens = auth()->user()->connections()->scopes('trading212')->pluck('access_token')->toArray();
-
-        array_map(fn($token) => decrypt($token), $existingTokens);
         request()->validate([
-            'token' => ['required', 'string', Rule::notIn($existingTokens), 'min:10', function ($attribute, $value, $fail) use ($service) {
-                if (!$service->validateToken($value)) {
-                    $fail('The provided token is invalid.');
-                }
-            }]
+            'key_id' => ['required', 'string', 'min:10'],
+            'secret_key' => ['required', 'string', 'min:10']
+        ], [
+            'key_id.min' => 'API Key ID must be at least 10 characters',
+            'secret_key.min' => 'Secret key must be at least 10 characters'
         ]);
 
-        $connection = DB::transaction(function () {
+        $token = request('key_id') . ':' . request('secret_key');
+        $token = base64_encode($token);
+
+        if (!$service->validateToken($token)) {
+            return back()->withErrors([
+                'secret_key' => 'Invalid credentials provided, connection not established'
+            ]);
+        }
+
+        $connection = DB::transaction(function () use ($token) {
             $connection = new UserConnection();
             $connection->connection_type = 'trading212';
-            $connection->access_token = encrypt(request('token'));
+            $connection->access_token = encrypt($token);
             $connection->user_id = auth()->id();
-            $connection->last_4_of_token = substr(request('token'), -4);
-            $connection->token_length = strlen(request('token'));
+            $connection->last_4_of_token = substr($token, -4);
+            $connection->token_length = strlen($token);
             $connection->save();
 
             return $connection;

@@ -33,42 +33,62 @@ export default function Trading212({
     }, []);
 
     const InactivePanel = () => {
-        const [token, setToken] = useState<string>('');
-        const [tokenError, setTokenError] = useState<string>('');
+        const [errorState, setErrorState] = useState<{
+            keyId?: string;
+            secretKeyId?: string;
+        }>();
         const errors = usePage<SharedData>().props.errors;
 
         useMemo(() => {
-            if (errors.token) {
-                setTokenError(errors.token);
-            }
+            setErrorState({
+                keyId: errors.key_id,
+                secretKeyId: errors.secret_key_id
+            });
         }, [errors]);
 
         const onSubmit = (e: React.FormEvent) => {
             e.preventDefault();
 
-            if (!token) {
-                setTokenError('Please enter a token.');
+            const formData = new FormData(e.currentTarget as HTMLFormElement);
+            const keyId = formData.get('key_id');
+            const secretKeyId = formData.get('secret_key_id');
+
+            setErrorState({});
+
+            if (!keyId) {
+                setErrorState(prev => ({ ...prev, keyId: 'API Key ID is required' }));
+            }
+
+            if (!secretKeyId) {
+                setErrorState(prev => ({ ...prev, secretKeyId: 'Secret Key ID is required' }));
+            }
+
+            if (!keyId || !secretKeyId) {
                 return;
             }
 
-            router.post('/connections/trading212', { token: token });
+            router.post('/connections/trading212', {
+                key_id: keyId,
+                secret_key: secretKeyId
+            }); 
         };
 
         return (
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1">
                     <div className="font-medium text-sm">Add a new connection</div>
-                    <div className="text-sm text-muted-foreground">Connect a new Trading212 account by entering your API Token below.</div>
+                    <div className="text-sm text-muted-foreground">Connect a new Trading212 account by entering your API credentials below.</div>
                 </div>
                 <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-                    <div className="flex flex-col space-y-2">
-                        <Label htmlFor="token">API Token</Label>
-                        <Input name="token" placeholder="Enter your token..." value={token} onChange={(e) => setToken(e.target.value)} />
-                        {tokenError && <p className="text-xs text-red-600">{tokenError}</p>}
+                    <div className="flex flex-col gap-3">
+                        <Input name="key_id" placeholder="API Key ID" className="text-xs" />
+                        {errorState?.keyId && <p className="text-xs text-red-600">{errorState.keyId}</p>}
+                        <Input name="secret_key_id" placeholder="Secret Key ID" className='text-xs' />
+                        {errorState?.secretKeyId && <p className="text-xs text-red-600">{errorState.secretKeyId}</p>}
                     </div>
 
                     <Button type="submit" className="hover:cursor-pointer">
-                        Add Connection
+                        Connect
                     </Button>
                 </form>
             </div>
