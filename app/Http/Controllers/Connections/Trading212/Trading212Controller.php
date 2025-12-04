@@ -45,8 +45,8 @@ class Trading212Controller extends Controller
             $connection->connection_type = 'trading212';
             $connection->access_token = encrypt($token);
             $connection->user_id = auth()->id();
-            $connection->last_4_of_token = substr($token, -4);
-            $connection->token_length = strlen($token);
+            $connection->last_4_of_token = substr(request('key_id'), -4);
+            $connection->token_length = strlen(request('key_id'));
             $connection->save();
 
             return $connection;

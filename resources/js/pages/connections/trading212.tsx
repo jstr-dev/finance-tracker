@@ -107,7 +107,7 @@ export default function Trading212({
                     </div>
 
                     <div className="flex flex-col gap-2">
-                        <div className="text-sm font-medium">Token</div>
+                        <div className="text-sm font-medium">API Key ID</div>
                         <Input value={tokenStr} readOnly disabled />
                     </div>
                 </div>
