@@ -7,7 +7,6 @@ use App\Jobs\SyncTrading212Data;
 use App\Models\UserConnection;
 use App\Services\Trading212Service;
 use DB;
-use Illuminate\Validation\Rule;
 
 class Trading212Controller extends Controller
 {
@@ -35,7 +34,7 @@ class Trading212Controller extends Controller
         $token = request('key_id') . ':' . request('secret_key');
         $token = base64_encode($token);
 
-        if (!$service->validateToken($token)) {
+        if (!$service->tokenHasAuth($token)) {
             return back()->withErrors([
                 'secret_key' => 'Invalid credentials provided, connection not established'
             ]);

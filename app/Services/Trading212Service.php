@@ -29,7 +29,7 @@ class Trading212Service {
     private function get(UserConnection $conn, string $endpoint, int $retries = 0)
     {
         $result = Http::baseUrl($this->uri)
-            ->withHeader('Authorization', $conn->getAccessToken())
+            ->withHeader('Authorization', 'Basic ' . $conn->getAccessToken())
             ->get($endpoint);
 
         if ($result->getStatusCode() === 429 && $retries < 3) {
@@ -67,9 +67,9 @@ class Trading212Service {
         return $this->get($conn, '/equity/metadata/instruments');
     }
 
-    public function validateToken(string $token)
+    public function tokenHasAuth(string $token)
     {
-        $res = Http::withHeader('Authorization', $token)
+        $res = Http::withHeader('Authorization', 'Basic ' . $token)
             ->baseUrl($this->uri)
             ->get("/equity/account/info");
         
@@ -96,6 +96,7 @@ class Trading212Service {
 
         foreach ($portfolio as $investment) {
             $this->log("Syncing Investment {$investment['ticker']}");
+
             $instrument = $instruments->get($investment['ticker']);
             $investments[] = [
                 'user_id' => $conn->user_id,
@@ -127,7 +128,7 @@ class Trading212Service {
 
     private function log(string $msg)
     {
-        if (!app()->runningInConsole()) {
+        if (!app()->runningInConsole() || app()->runningUnitTests()) {
             return;
         }
 
