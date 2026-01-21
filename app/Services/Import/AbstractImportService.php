@@ -3,6 +3,7 @@
 namespace App\Services\Import;
 
 use App\Exceptions\InvalidHeadersException;
+use App\Exceptions\InvalidRowException;
 use App\Models\User;
 use Exception;
 use Illuminate\Support\Facades\Storage;
@@ -17,6 +18,7 @@ abstract class AbstractImportService
     private string $currency = 'GBP';
     private $readStream = null;
     private array $headers = [];
+    private int $headerCount = 0;
 
     abstract protected function getType(): string;
     abstract protected function getRequiredCSVHeaders(): array;
@@ -24,9 +26,9 @@ abstract class AbstractImportService
 
     private function checkHeadersAreValid(array $csvHeaders): bool
     {
-        $requiredHeaders = $this->getRequiredCSVHeaders();
+        $required = $this->normaliseHeaders($this->getRequiredCSVHeaders());
 
-        return count(array_diff($requiredHeaders, $csvHeaders)) === 0;
+        return empty(array_diff($required, $csvHeaders));
     }
 
     public function setCurrency(string $currency)
@@ -39,11 +41,23 @@ abstract class AbstractImportService
         return $this->currency;
     }
 
+    private function normaliseHeaders(array $headers): array
+    {
+        return array_map(function ($header) {
+            $trimmed = trim($header);
+            $lowercased = strtolower($trimmed);
+            $normalized = preg_replace('/\s+/', ' ', $lowercased);
+
+            return $normalized;
+        }, $headers);
+    }
+
     public function import(User $user, string $path): void 
     {
         try {
             $this->readStream = Storage::readStream($path);
-            $this->headers = fgetcsv($this->readStream);
+            $this->headers = $this->normaliseHeaders(fgetcsv($this->readStream));
+            $this->headerCount = count($this->headers);
 
             assert($this->checkHeadersAreValid($this->headers), new InvalidHeadersException());
 
@@ -62,7 +76,11 @@ abstract class AbstractImportService
         $batch = []; 
 
         while ($row = fgetcsv($this->readStream)) {
-            $batch[] = $row;
+            if (count($row) !== $this->headerCount) {
+                throw new InvalidRowException("Row count (" . count($row) . ") does not match header count ({$this->headerCount}).");
+            }
+
+            $batch[] = $this->formatRowWithHeaders($row, $this->headers);
 
             if (count($batch) === self::CHUNK_SIZE) {
                 $this->processChunk($batch);
@@ -82,6 +100,5 @@ abstract class AbstractImportService
 
     private function processChunk(array $chunk): void
     {
-        
     }
 }
