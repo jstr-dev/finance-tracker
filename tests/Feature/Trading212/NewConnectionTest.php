@@ -3,7 +3,9 @@
 namespace Tests\Feature\Trading212;
 
 use App\Models\User;
+use App\Services\Trading212Service;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Mockery\MockInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -14,6 +16,7 @@ class NewConnectionTest extends TestCase
     public static string $validKeyId;
     public static string $validSecretKey;
     public User $user;
+    public $mock;
 
     public function setUp(): void
     {
@@ -23,6 +26,10 @@ class NewConnectionTest extends TestCase
         self::$validSecretKey = env('TRADING212_TEST_SECRET_KEY', '');
 
         $this->user = User::factory()->create();
+        $this->mock = $this->mock(Trading212Service::class, function (MockInterface $mock) {
+            $mock->shouldReceive('tokenHasAuth')
+                ->andReturnTrue();
+        });
     }
 
     #[DataProvider('invalidDataProvider')]
@@ -33,6 +40,7 @@ class NewConnectionTest extends TestCase
             'key_id' => $keyId,
             'secret_key' => $secretKeyId,
         ])->assertSessionHasErrors();
+        $this->mock->shouldNotHaveBeenCalled();
     }
 
     public static function invalidDataProvider()
@@ -60,5 +68,6 @@ class NewConnectionTest extends TestCase
         ]);
 
         $response->assertSessionDoesntHaveErrors();
+        $this->mock->shouldHaveReceived('tokenHasAuth')->once();
     }
 }
