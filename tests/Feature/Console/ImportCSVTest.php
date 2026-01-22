@@ -41,12 +41,7 @@ class ImportCSVTest extends TestCase
 
         $user = User::factory()->create();
         
-        $csvContent = <<<CSV
-            Date,Description,Amount,Extended Details,Appears On Your Statement As,Address,Town/City,Postcode,Country,Reference,Category
-            02/11/2025,ACME STORE*ABC123  ONLINE.COM,42.50,,ACME STORE*ABC123  ONLINE.COM,123 MAIN STREET,SPRINGFIELD,12345,UNITED STATES,'TX001234567890001',General Purchases-Online Purchases
-            03/11/2025,GROCERY MART 9999 DOWNTOWN,15.75,,GROCERY MART 9999 DOWNTOWN,456 OAK AVENUE,RIVERSIDE,67890,UNITED STATES,'TX001234567890002',General Purchases-Groceries
-        CSV;
-
+        $csvContent = file_get_contents(base_path('tests/fixtures/csv/amex-test.csv'));
         Storage::disk('local')->put('test-amex.csv', $csvContent);
 
         // Test service directly
@@ -81,12 +76,7 @@ class ImportCSVTest extends TestCase
 
         $user = User::factory()->create();
         
-        $csvContent = <<<CSV
-            Date,Description,Amount,Extended Details,Appears On Your Statement As,Address,Town/City,Postcode,Country,Reference,Category
-            02/11/2025,ACME STORE*ABC123  ONLINE.COM,42.50,,ACME STORE*ABC123  ONLINE.COM,123 MAIN STREET,SPRINGFIELD,12345,UNITED STATES,'TX001234567890001',General Purchases-Online Purchases
-            03/11/2025,GROCERY MART 9999 DOWNTOWN,15.75,,GROCERY MART 9999 DOWNTOWN,456 OAK AVENUE,RIVERSIDE,67890,UNITED STATES,'TX001234567890002',General Purchases-Groceries
-        CSV;
-
+        $csvContent = file_get_contents(base_path('tests/fixtures/csv/amex-test.csv'));
         Storage::disk('local')->put('test-amex.csv', $csvContent);
 
         $this->artisan('import:csv', [
@@ -143,5 +133,36 @@ class ImportCSVTest extends TestCase
             'path' => 'test.csv',
             '--type' => 'invalid-type'
         ])->assertExitCode(1);
+    }
+
+    public function test_trims_whitespace_from_csv_values(): void
+    {
+        $this->mock(GeminiService::class, function ($mock) {
+            $mock->shouldReceive('chat')
+                ->andReturn(
+                    "Widget Co|WIDGET.*",
+                    "Shopping|General\\s+Purchases.*"
+                );
+        });
+
+        $user = User::factory()->create();
+        
+        $csvContent = file_get_contents(base_path('tests/fixtures/csv/amex-with-whitespace.csv'));
+        Storage::disk('local')->put('test-whitespace.csv', $csvContent);
+
+        $this->artisan('import:csv', [
+            'userId' => $user->id,
+            'path' => 'test-whitespace.csv',
+            '--type' => 'amex'
+        ])
+            ->assertExitCode(0);
+
+        $this->assertDatabaseHas('user_transactions', [
+            'user_id' => $user->id,
+            'transaction_id' => 'TX001234567890003',
+            'amount' => 99.99,
+            'merchant' => 'Widget Co',
+            'category' => 'Shopping',
+        ]);
     }
 }

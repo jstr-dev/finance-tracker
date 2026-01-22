@@ -112,7 +112,8 @@ abstract class AbstractImportService
 
     private function formatRowWithHeaders(array $row, array $headers): array
     {
-        return array_combine($headers, $row);
+        $trimmedRow = array_map('trim', $row);
+        return array_combine($headers, $trimmedRow);
     }
 
     private function processChunk(User $user, array $chunk): void
