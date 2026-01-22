@@ -46,5 +46,10 @@ return [
         'client_id' => env('MONZO_CLIENT_ID'),
         'client_secret' => env('MONZO_CLIENT_SECRET'),
         'redirect_uri' => env('MONZO_REDIRECT_URI'),
-    ]
+    ],
+
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-2.5-flash-lite'),
+    ],
 ];

@@ -14,6 +14,24 @@
 	- User-driven imports (CSV or similar) when APIs are unavailable.
 - Each connection/import should map transactions to a normalized schema (date, amount, merchant/description, category, type, currency, and unique transaction id).
 
+### CSV Import Architecture
+- Import services extend `AbstractImportService`
+- Each import creates an `Import` record with status tracking (processing/completed/failed)
+- Transaction normalization flow:
+	1. Extract unique merchants/categories from chunk
+	2. Check normalization cache (exact match → regex match)
+	3. Batch remaining unknowns to AI for normalization
+	4. Cache results (raw + normalized + regex pattern)
+	5. Upsert transactions with normalized data
+- Console command: `php artisan import:csv {userId} {path} {--type=amex}`
+- Import services must:
+	- Define required CSV headers via `getRequiredCSVHeaders()`
+	- Extract transaction ID via `getRowTransactionID()`
+	- Format row data via `formatRowForImport()`
+	- Optionally extract category via `extractCategory()` (implement `HasCategory`)
+- Storage disk defaults to 'local' (override with `setDisk()`)
+- Chunk size: 100 rows per batch
+
 ## Core insights to deliver
 - Dashboard must visualize:
 	- Net worth

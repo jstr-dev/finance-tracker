@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Import;
 use App\Models\User;
 use App\Services\Import\AmericanExpressImportService;
 use Illuminate\Console\Command;
@@ -20,7 +21,7 @@ class ImportCSV extends Command
         'amex' => AmericanExpressImportService::class,
     ];
 
-    public function handle()
+    public function handle(): int
     {
         $user = User::find($this->argument('userId'));
         $type = $this->option('type');
@@ -28,7 +29,7 @@ class ImportCSV extends Command
 
         if (!$serviceClass) {
             $this->error("Unsupported import type: {$type}");
-            return;
+            return 1;
         }
 
         /** @var \App\Services\Import\AbstractImportService $service */
@@ -36,14 +37,46 @@ class ImportCSV extends Command
         
         if (!$user) {
             $this->error('User not found.');
-            return;
+            return 1;
         }
+
+        $import = null;
 
         try {
             $this->info("Starting import for user ID: {$user->id}");
+
+            // Create Import record
+            $import = Import::create([
+                'user_id' => $user->id,
+                'type' => $type,
+                'status' => 'processing',
+                'started_at' => now(),
+            ]);
+
+            // Set import ID on service
+            $service->setImportId($import->id);
+
+            // Run import
             $service->import($user, $this->argument('path'));
+
+            // Mark as completed
+            $import->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+            ]);
+
+            $this->info('Import completed successfully.');
+            return 0;
         } catch (\Exception $e) {
+            if ($import) {
+                $import->update([
+                    'status' => 'failed',
+                    'completed_at' => now(),
+                ]);
+            }
+
             $this->error('Error during import: ' . $e->getMessage());
+            return 1;
         }
     }
 }

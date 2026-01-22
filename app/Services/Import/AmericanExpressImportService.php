@@ -2,14 +2,14 @@
 
 namespace App\Services\Import;
 
-class AmericanExpressImportService extends AbstractImportService
+class AmericanExpressImportService extends AbstractImportService implements HasCategory
 {
-    protected function getType(): string
+    public function getType(): string
     {
         return 'amex';
     }
 
-    protected function getRequiredCSVHeaders(): array
+    public function getRequiredCSVHeaders(): array
     {
         return [
             'Date',
@@ -19,21 +19,35 @@ class AmericanExpressImportService extends AbstractImportService
         ];
     }
 
-    protected function getRowTransactionID(array $row): string
+    public function getRowTransactionID(array $row): string
     {
-        $transactionId = $row['Reference']; 
+        $transactionId = $row['reference'];
         $transactionId = str_replace(' ', '', $transactionId);
         $transactionId = str_replace('\'', '', $transactionId);
 
         return $transactionId;
     }
-       
-    protected function formatRowForImport(array $row): array
+
+    public function extractCategory(array $row): ?string
     {
+        return $row['category'] ?? null;
+    }
+
+    public function formatRowForImport(array $row): array
+    {
+        $date = $row['date'];
+        if (preg_match('#^(\d{2})/(\d{2})/(\d{4})$#', $date, $matches)) {
+            $date = $matches[3] . '-' . $matches[2] . '-' . $matches[1];
+        }
+
         return [
-            'transaction_date' => $row['Date'],
-            'merchant' => $row['Description'],
-            'amount' => $row['Amount'],
+            'transaction_date' => $date,
+            'payee' => $row['appears on your statement as'] ?? $row['description'],
+            'amount' => $row['amount'],
+            'description' => $row['extended details'] ?? null,
+            'city' => $row['town/city'] ?? null,
+            'postcode' => $row['postcode'] ?? null,
+            'country' => $row['country'] ?? null,
         ];
     }
 }
