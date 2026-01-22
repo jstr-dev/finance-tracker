@@ -174,12 +174,6 @@ class ImportTransactionsTest extends TestCase
     {
         $user = User::factory()->create();
         
-        $import = \App\Models\Import::create([
-            'user_id' => $user->id,
-            'type' => 'amex',
-            'status' => 'processing',
-        ]);
-        
         $csv = "Date,Description,Amount,Reference\n";
         $csv .= "01/01/2025,\"MERCHANT\",10.00,'TX1'";
         
@@ -190,8 +184,7 @@ class ImportTransactionsTest extends TestCase
         });
         
         $service = new AmericanExpressImportService();
-        $service->setImportId($import->id);
-        $service->import($user, 'test.csv');
+        $import = $service->startImport($user, 'test.csv');
         
         $transaction = UserTransaction::first();
         $this->assertEquals($import->id, $transaction->import_id);

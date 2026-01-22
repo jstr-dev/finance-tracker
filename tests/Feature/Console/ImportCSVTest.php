@@ -44,17 +44,9 @@ class ImportCSVTest extends TestCase
         $csvContent = file_get_contents(base_path('tests/fixtures/csv/amex-test.csv'));
         Storage::disk('local')->put('test-amex.csv', $csvContent);
 
-        // Test service directly
-        $import = Import::create([
-            'user_id' => $user->id,
-            'type' => 'amex',
-            'status' => 'processing',
-            'started_at' => now(),
-        ]);
-
         $service = app(\App\Services\Import\AmericanExpressImportService::class);
-        $service->setImportId($import->id);
-        $service->import($user, 'test-amex.csv');
+        $service->setDisk('local');
+        $import = $service->startImport($user, 'test-amex.csv');
 
         $this->assertEquals(2, UserTransaction::where('user_id', $user->id)->count());
         $this->assertDatabaseHas('user_transactions', [

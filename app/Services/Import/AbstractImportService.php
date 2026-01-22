@@ -4,6 +4,8 @@ namespace App\Services\Import;
 
 use App\Exceptions\InvalidHeadersException;
 use App\Exceptions\InvalidRowException;
+use App\Jobs\ProcessCSVImport;
+use App\Models\Import;
 use App\Models\User;
 use App\Models\UserTransaction;
 use App\Services\TransactionNormalizationService;
@@ -22,12 +24,62 @@ abstract class AbstractImportService
     private $readStream = null;
     private array $headers = [];
     private int $headerCount = 0;
-    private ?int $importId = null;
+    private ?Import $import = null;
 
     abstract protected function getType(): string;
     abstract protected function getRequiredCSVHeaders(): array;
     abstract protected function getRowTransactionID(array $row): string;
     abstract protected function formatRowForImport(array $row): array;
+
+    /**
+     * Start an import. Creates Import record and either processes synchronously or dispatches a job.
+     */
+    public function startImport(User $user, string $path, bool $async = false): Import
+    {
+        $import = Import::create([
+            'user_id' => $user->id,
+            'type' => $this->getType(),
+            'status' => 'processing',
+            'started_at' => now(),
+        ]);
+
+        if ($async) {
+            ProcessCSVImport::dispatch(
+                $import->id,
+                $user->id,
+                $path,
+                static::class
+            );
+        } else {
+            $this->processImport($import, $user, $path);
+        }
+
+        return $import;
+    }
+
+    /**
+     * Process the actual import. Called either synchronously or from a job.
+     */
+    public function processImport(Import $import, User $user, string $path): void
+    {
+        $this->import = $import;
+
+        try {
+            $this->import($user, $path);
+
+            $import->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+            ]);
+        } catch (Exception $e) {
+            $import->update([
+                'status' => 'failed',
+                'completed_at' => now(),
+            ]);
+
+            throw $e;
+        }
+    }
 
     private function checkHeadersAreValid(array $csvHeaders): bool
     {
@@ -160,7 +212,7 @@ abstract class AbstractImportService
                 'merchant' => $rawMerchant ? ($normalizedMerchants[$rawMerchant] ?? $rawMerchant) : null,
                 'category' => $rawCategory ? ($normalizedCategories[$rawCategory] ?? $rawCategory) : null,
                 'currency' => $this->currency,
-                'import_id' => $this->importId,
+                'import_id' => $this->import?->id,
                 'imported_at' => now(),
                 'payload' => json_encode($row),
                 'created_at' => now(),

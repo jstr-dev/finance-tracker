@@ -13,6 +13,7 @@ class ImportCSV extends Command
         {userId : The ID of the user to import the CSV for} 
         {path : The path to the CSV file to import}
         {--type=amex : The type of CSV to import}
+        {--async : Process the import asynchronously via queue}
     ';
 
     protected $description = 'Import CSV using given file path.';
@@ -25,6 +26,7 @@ class ImportCSV extends Command
     {
         $user = User::find($this->argument('userId'));
         $type = $this->option('type');
+        $async = $this->option('async');
         $serviceClass = $this->services[$type] ?? null;
 
         if (!$serviceClass) {
@@ -32,49 +34,26 @@ class ImportCSV extends Command
             return 1;
         }
 
-        /** @var \App\Services\Import\AbstractImportService $service */
-        $service = app($serviceClass);
-        
         if (!$user) {
             $this->error('User not found.');
             return 1;
         }
 
-        $import = null;
-
         try {
             $this->info("Starting import for user ID: {$user->id}");
 
-            // Create Import record
-            $import = Import::create([
-                'user_id' => $user->id,
-                'type' => $type,
-                'status' => 'processing',
-                'started_at' => now(),
-            ]);
+            /** @var \App\Services\Import\AbstractImportService $service */
+            $service = app($serviceClass);
+            $import = $service->startImport($user, $this->argument('path'), $async);
 
-            // Set import ID on service
-            $service->setImportId($import->id);
-
-            // Run import
-            $service->import($user, $this->argument('path'));
-
-            // Mark as completed
-            $import->update([
-                'status' => 'completed',
-                'completed_at' => now(),
-            ]);
-
-            $this->info('Import completed successfully.');
-            return 0;
-        } catch (\Exception $e) {
-            if ($import) {
-                $import->update([
-                    'status' => 'failed',
-                    'completed_at' => now(),
-                ]);
+            if ($async) {
+                $this->info("Import queued successfully. Import ID: {$import->id}");
+            } else {
+                $this->info('Import completed successfully.');
             }
 
+            return 0;
+        } catch (\Exception $e) {
             $this->error('Error during import: ' . $e->getMessage());
             return 1;
         }
