@@ -22,8 +22,19 @@ class GeminiService
         $this->model = config('services.gemini.model', 'gemini-2.0-flash-exp');
     }
 
-    public function chat(string $systemPrompt, string $userPrompt, float $temperature = 0.3): string
+    public function chat(string $systemPrompt, string $userPrompt, ?array $jsonSchema = null, float $temperature = 0.3): string
     {
+        $generationConfig = [
+            'temperature' => $temperature,
+            'maxOutputTokens' => 2048,
+        ];
+
+        // Add structured output configuration if schema provided
+        if ($jsonSchema !== null) {
+            $generationConfig['responseMimeType'] = 'application/json';
+            $generationConfig['responseJsonSchema'] = $jsonSchema;
+        }
+
         $response = Http::post("https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent?key={$this->apiKey}", [
             'contents' => [
                 [
@@ -33,10 +44,7 @@ class GeminiService
                     ],
                 ],
             ],
-            'generationConfig' => [
-                'temperature' => $temperature,
-                'maxOutputTokens' => 2048,
-            ],
+            'generationConfig' => $generationConfig,
         ]);
 
         if (!$response->successful()) {

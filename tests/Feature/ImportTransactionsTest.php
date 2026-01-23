@@ -38,7 +38,16 @@ class ImportTransactionsTest extends TestCase
         
         $this->mock(GeminiService::class, function ($mock) {
             $mock->shouldReceive('chat')
-                ->andReturn("Acme Store|ACME.*\nGrocery Mart|GROCERY.*", "Shopping|General\\s+Purchases.*\nGroceries|Groceries.*");
+                ->andReturn(
+                    json_encode(['normalizations' => [
+                        ['normalized' => 'Acme Store', 'regex' => 'ACME.*'],
+                        ['normalized' => 'Grocery Mart', 'regex' => 'GROCERY.*'],
+                    ]]),
+                    json_encode(['normalizations' => [
+                        ['normalized' => 'Shopping', 'regex' => 'General\\s+Purchases.*'],
+                        ['normalized' => 'Groceries', 'regex' => 'Groceries.*'],
+                    ]])
+                );
         });
         
         $service = new AmericanExpressImportService();
@@ -85,7 +94,7 @@ class ImportTransactionsTest extends TestCase
         Storage::put('test.csv', $csv);
         
         $this->mock(GeminiService::class, function ($mock) {
-            $mock->shouldReceive('chat')->andReturn("New Merchant|NEW.*");
+            $mock->shouldReceive('chat')->andReturn(json_encode(['normalizations' => [['normalized' => 'New Merchant', 'regex' => 'NEW.*']]]));
         });
         
         $service = new AmericanExpressImportService();
@@ -113,7 +122,7 @@ class ImportTransactionsTest extends TestCase
         $this->mock(GeminiService::class, function ($mock) use (&$callCount) {
             $mock->shouldReceive('chat')->andReturnUsing(function () use (&$callCount) {
                 $callCount++;
-                return str_repeat("Merchant|MERCHANT.*\n", 100);
+                return json_encode(['normalizations' => array_fill(0, 100, ['normalized' => 'Merchant', 'regex' => 'MERCHANT.*'])]);
             });
         });
         
@@ -137,9 +146,12 @@ class ImportTransactionsTest extends TestCase
         
         $aiCalls = 0;
         $this->mock(GeminiService::class, function ($mock) use (&$aiCalls) {
-            $mock->shouldReceive('chat')->andReturnUsing(function () use (&$aiCalls) {
+            $mock->shouldReceive('chat')->once()->andReturnUsing(function () use (&$aiCalls) {
                 $aiCalls++;
-                return "Widget Co|WIDGET\\s+CO.*\n" . str_repeat("Other|OTHER.*\n", 99);
+                return json_encode(['normalizations' => [
+                    ['normalized' => 'Widget Co', 'regex' => 'WIDGET\\s+CO.*'],
+                    ['normalized' => 'Other', 'regex' => 'OTHER.*'],
+                ]]);
             });
         });
         
@@ -180,7 +192,7 @@ class ImportTransactionsTest extends TestCase
         Storage::put('test.csv', $csv);
         
         $this->mock(GeminiService::class, function ($mock) {
-            $mock->shouldReceive('chat')->andReturn("Merchant|MERCHANT.*");
+            $mock->shouldReceive('chat')->andReturn(json_encode(['normalizations' => [['normalized' => 'Test', 'regex' => 'TEST.*']]]));
         });
         
         $service = new AmericanExpressImportService();
@@ -200,7 +212,7 @@ class ImportTransactionsTest extends TestCase
         Storage::put('test.csv', $csv);
         
         $this->mock(GeminiService::class, function ($mock) {
-            $mock->shouldReceive('chat')->andReturn("Merchant|MERCHANT.*");
+            $mock->shouldReceive('chat')->andReturn(json_encode(['normalizations' => [['normalized' => 'Merchant', 'regex' => 'MERCHANT.*']]]));
         });
         
         $service = new AmericanExpressImportService();

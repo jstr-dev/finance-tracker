@@ -16,21 +16,30 @@
 
 ### CSV Import Architecture
 - Import services extend `AbstractImportService`
+- Service owns import lifecycle via `startImport()` method
 - Each import creates an `Import` record with status tracking (processing/completed/failed)
+- Supports sync and async modes:
+	- Sync: `$service->startImport($user, $path, false)` - blocks until complete
+	- Async: `$service->startImport($user, $path, true)` - dispatches `ProcessCSVImport` job
 - Transaction normalization flow:
 	1. Extract unique merchants/categories from chunk
 	2. Check normalization cache (exact match → regex match)
 	3. Batch remaining unknowns to AI for normalization
-	4. Cache results (raw + normalized + regex pattern)
-	5. Upsert transactions with normalized data
-- Console command: `php artisan import:csv {userId} {path} {--type=amex}`
+	4. **Deduplicate regex patterns** before storing (prevent duplicates)
+	5. Upsert normalizations by regex_pattern (handle race conditions)
+	6. Cache results (raw + normalized + regex pattern)
+	7. Upsert transactions with normalized data
+- Console command: `php artisan import:csv {userId} {path} {--type=amex} {--async}`
 - Import services must:
+	- Implement `getType()` - returns import type identifier
 	- Define required CSV headers via `getRequiredCSVHeaders()`
 	- Extract transaction ID via `getRowTransactionID()`
 	- Format row data via `formatRowForImport()`
 	- Optionally extract category via `extractCategory()` (implement `HasCategory`)
 - Storage disk defaults to 'local' (override with `setDisk()`)
 - Chunk size: 100 rows per batch
+- **All CSV values are automatically trimmed** before processing
+- Normalization tables have unique constraints on regex_pattern columns
 
 ## Core insights to deliver
 - Dashboard must visualize:

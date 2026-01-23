@@ -64,7 +64,11 @@ class TransactionNormalizationServiceTest extends TestCase
         $this->mock(GeminiService::class, function ($mock) {
             $mock->shouldReceive('chat')
                 ->once()
-                ->andReturn("Widget Co|WIDGET\\s+CO.*");
+                ->andReturn(json_encode([
+                    'normalizations' => [
+                        ['normalized' => 'Widget Co', 'regex' => 'WIDGET\\s+CO.*'],
+                    ],
+                ]));
         });
 
         $service = new TransactionNormalizationService();
@@ -122,7 +126,11 @@ class TransactionNormalizationServiceTest extends TestCase
         $this->mock(GeminiService::class, function ($mock) {
             $mock->shouldReceive('chat')
                 ->once()
-                ->andReturn("Shopping|General\\s+Purchases.*");
+                ->andReturn(json_encode([
+                    'normalizations' => [
+                        ['normalized' => 'Shopping', 'regex' => 'General\\s+Purchases.*'],
+                    ],
+                ]));
         });
 
         $service = new TransactionNormalizationService();
@@ -156,7 +164,12 @@ class TransactionNormalizationServiceTest extends TestCase
         $this->mock(GeminiService::class, function ($mock) {
             $mock->shouldReceive('chat')
                 ->once()
-                ->andReturn("Widget Co|WIDGET.*\nFood Mart|FOOD.*");
+                ->andReturn(json_encode([
+                    'normalizations' => [
+                        ['normalized' => 'Widget Co', 'regex' => 'WIDGET.*'],
+                        ['normalized' => 'Food Mart', 'regex' => 'FOOD.*'],
+                    ],
+                ]));
         });
 
         $service = new TransactionNormalizationService();
@@ -181,6 +194,37 @@ class TransactionNormalizationServiceTest extends TestCase
         $service->normalizeMerchants(['WIDGET*NEW1', 'WIDGET*NEW2', 'WIDGET*NEW3']);
 
         $this->assertEquals(3, MerchantNormalization::where('detection_method', 'regex')->count());
+    }
+
+    public function test_deduplicates_same_regex_pattern_from_ai_response(): void
+    {
+        $this->mock(GeminiService::class, function ($mock) {
+            $mock->shouldReceive('chat')
+                ->once()
+                ->andReturn(json_encode([
+                    'normalizations' => [
+                        ['normalized' => 'Amazon Marketplace', 'regex' => 'AMZNMKTP.*'],
+                        ['normalized' => 'Amazon Marketplace', 'regex' => 'AMZNMKTP.*'],
+                        ['normalized' => 'Amazon Marketplace', 'regex' => 'AMZNMKTP.*'],
+                    ],
+                ]));
+        });
+
+        $service = new TransactionNormalizationService();
+        $result = $service->normalizeMerchants([
+            'AMZNMKTPLACE*Z  AMAZON.CO.UK',
+            'AMZNMKTPLACE*XYZ AMZN.COM/BILL',
+            'AMZNMKTPLACE*ABC MARKETPLACE',
+        ]);
+
+        // All merchants should be normalized
+        $this->assertCount(3, $result);
+        $this->assertEquals('Amazon Marketplace', $result['AMZNMKTPLACE*Z  AMAZON.CO.UK']);
+        $this->assertEquals('Amazon Marketplace', $result['AMZNMKTPLACE*XYZ AMZN.COM/BILL']);
+        $this->assertEquals('Amazon Marketplace', $result['AMZNMKTPLACE*ABC MARKETPLACE']);
+
+        // But only one regex pattern should be stored
+        $this->assertEquals(1, MerchantNormalization::where('regex_pattern', 'AMZNMKTP.*')->count());
     }
 }
 

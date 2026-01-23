@@ -21,6 +21,7 @@ return new class extends Migration
 
             $table->index('raw_merchant');
             $table->index('regex_pattern');
+            $table->unique('regex_pattern', 'unique_merchant_regex');
         });
 
         Schema::create('category_normalizations', function (Blueprint $table) {
@@ -33,6 +34,7 @@ return new class extends Migration
 
             $table->index('raw_category');
             $table->index('regex_pattern');
+            $table->unique('regex_pattern', 'unique_category_regex');
         });
     }
 

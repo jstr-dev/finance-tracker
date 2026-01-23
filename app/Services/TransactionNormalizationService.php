@@ -17,17 +17,38 @@ class TransactionNormalizationService
         1. A clean, recognizable merchant/brand name
         2. A regex pattern (without delimiters) that will match similar variations
 
-        Format your response as:
-        normalized_name|regex_pattern
-
         Example input: "AMAZON PRIME*Y898213HD  AMZN.CO.UK/PM"
-        Example output: Amazon Prime|AMAZON\s+PRIME.*
+        Example output: {"normalized": "Amazon Prime", "regex": "AMAZON\\s+PRIME.*"}
 
         Merchants to normalize:
         {list}
 
-        Respond with one line per merchant in the same order, using the format: normalized_name|regex_pattern
+        Return an array of objects with "normalized" and "regex" properties, one per merchant in the same order.
     PROMPT;
+
+    private const MERCHANT_JSON_SCHEMA = [
+        'type' => 'object',
+        'properties' => [
+            'normalizations' => [
+                'type' => 'array',
+                'items' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'normalized' => [
+                            'type' => 'string',
+                            'description' => 'Clean, recognizable merchant/brand name',
+                        ],
+                        'regex' => [
+                            'type' => 'string',
+                            'description' => 'Regex pattern (without delimiters) to match variations',
+                        ],
+                    ],
+                    'required' => ['normalized', 'regex'],
+                ],
+            ],
+        ],
+        'required' => ['normalizations'],
+    ];
 
     private const CATEGORY_SYSTEM_PROMPT = 'You are a financial category normalization expert. Provide standardized category names from a predefined list and regex patterns.';
 
@@ -36,17 +57,38 @@ class TransactionNormalizationService
         1. A standardized category name from this list: {categories}
         2. A regex pattern (without delimiters) that will match similar variations
 
-        Format your response as:
-        normalized_category|regex_pattern
-
         Example input: "General Purchases-Online Purchases"
-        Example output: Shopping|General\s+Purchases.*Online
+        Example output: {"normalized": "Shopping", "regex": "General\\s+Purchases.*Online"}
 
         Categories to normalize:
         {list}
 
-        Respond with one line per category in the same order, using the format: normalized_category|regex_pattern
+        Return an array of objects with "normalized" and "regex" properties, one per category in the same order.
     PROMPT;
+
+    private const CATEGORY_JSON_SCHEMA = [
+        'type' => 'object',
+        'properties' => [
+            'normalizations' => [
+                'type' => 'array',
+                'items' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'normalized' => [
+                            'type' => 'string',
+                            'description' => 'Standardized category name from predefined list',
+                        ],
+                        'regex' => [
+                            'type' => 'string',
+                            'description' => 'Regex pattern (without delimiters) to match variations',
+                        ],
+                    ],
+                    'required' => ['normalized', 'regex'],
+                ],
+            ],
+        ],
+        'required' => ['normalizations'],
+    ];
 
     /**
      * Normalize a batch of merchants.
@@ -103,15 +145,39 @@ class TransactionNormalizationService
         if (!empty($uncached)) {
             $normalized = $this->normalizeMerchantsViaAI($uncached);
 
+            // Deduplicate by regex pattern (keep first occurrence)
+            $seenPatterns = [];
+            $toInsert = [];
+
             foreach ($normalized as $raw => $data) {
-                MerchantNormalization::create([
-                    'raw_merchant' => $raw,
-                    'normalized_merchant' => $data['normalized'],
-                    'regex_pattern' => $data['regex'] ?? null,
-                    'detection_method' => 'ai',
-                ]);
+                $pattern = $data['regex'] ?? null;
+
+                // Only insert if regex is null or we haven't seen this pattern yet
+                if ($pattern === null || !isset($seenPatterns[$pattern])) {
+                    if ($pattern !== null) {
+                        $seenPatterns[$pattern] = true;
+                    }
+
+                    $toInsert[] = [
+                        'raw_merchant' => $raw,
+                        'normalized_merchant' => $data['normalized'],
+                        'regex_pattern' => $pattern,
+                        'detection_method' => 'ai',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
 
                 $results[$raw] = $data['normalized'];
+            }
+
+            if (!empty($toInsert)) {
+                // Upsert on regex_pattern to handle race conditions
+                MerchantNormalization::upsert(
+                    $toInsert,
+                    ['regex_pattern'],
+                    ['normalized_merchant', 'detection_method', 'updated_at']
+                );
             }
         }
 
@@ -173,15 +239,39 @@ class TransactionNormalizationService
         if (!empty($uncached)) {
             $normalized = $this->normalizeCategoriesViaAI($uncached);
 
+            // Deduplicate by regex pattern (keep first occurrence)
+            $seenPatterns = [];
+            $toInsert = [];
+
             foreach ($normalized as $raw => $data) {
-                CategoryNormalization::create([
-                    'raw_category' => $raw,
-                    'normalized_category' => $data['normalized'],
-                    'regex_pattern' => $data['regex'] ?? null,
-                    'detection_method' => 'ai',
-                ]);
+                $pattern = $data['regex'] ?? null;
+
+                // Only insert if regex is null or we haven't seen this pattern yet
+                if ($pattern === null || !isset($seenPatterns[$pattern])) {
+                    if ($pattern !== null) {
+                        $seenPatterns[$pattern] = true;
+                    }
+
+                    $toInsert[] = [
+                        'raw_category' => $raw,
+                        'normalized_category' => $data['normalized'],
+                        'regex_pattern' => $pattern,
+                        'detection_method' => 'ai',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
 
                 $results[$raw] = $data['normalized'];
+            }
+
+            if (!empty($toInsert)) {
+                // Upsert on regex_pattern to handle race conditions
+                CategoryNormalization::upsert(
+                    $toInsert,
+                    ['regex_pattern'],
+                    ['normalized_category', 'detection_method', 'updated_at']
+                );
             }
         }
 
@@ -191,11 +281,9 @@ class TransactionNormalizationService
     protected function normalizeMerchantsViaAI(array $rawMerchants): array
     {
         $gemini = app(GeminiService::class);
-
         $list = implode("\n", array_map(fn($idx, $m) => ($idx + 1) . ". $m", array_keys($rawMerchants), $rawMerchants));
         $prompt = str_replace('{list}', $list, self::MERCHANT_USER_PROMPT);
-        
-        $content = $gemini->chat(self::MERCHANT_SYSTEM_PROMPT, $prompt, 0.3);
+        $content = $gemini->chat(self::MERCHANT_SYSTEM_PROMPT, $prompt, self::MERCHANT_JSON_SCHEMA, 0.3);
 
         return $this->parseMerchantResponse($content, $rawMerchants);
     }
@@ -214,49 +302,73 @@ class TransactionNormalizationService
 
         $list = implode("\n", array_map(fn($idx, $c) => ($idx + 1) . ". $c", array_keys($rawCategories), $rawCategories));
         $prompt = str_replace(['{categories}', '{list}'], [$availableCategories, $list], self::CATEGORY_USER_PROMPT);
-        
-        $content = $gemini->chat(self::CATEGORY_SYSTEM_PROMPT, $prompt, 0.3);
+
+        $content = $gemini->chat(self::CATEGORY_SYSTEM_PROMPT, $prompt, self::CATEGORY_JSON_SCHEMA, 0.3);
 
         return $this->parseCategoryResponse($content, $rawCategories);
     }
 
     protected function parseMerchantResponse(string $content, array $rawMerchants): array
     {
-        $lines = array_filter(array_map('trim', explode("\n", $content)));
-        $results = [];
-        
-        foreach ($rawMerchants as $idx => $raw) {
-            if (!isset($lines[$idx])) {
-                throw new RuntimeException("AI response missing merchant at index {$idx}");
-            }
+        $data = json_decode($content, true);
 
-            $parts = explode('|', $lines[$idx], 2);
-            $results[$raw] = [
-                'normalized' => trim($parts[0]),
-                'regex' => isset($parts[1]) ? trim($parts[1]) : null,
-            ];
+        if (!isset($data['normalizations']) || !is_array($data['normalizations'])) {
+            throw new RuntimeException('Invalid merchant normalization response structure');
         }
 
+        $normalizations = $data['normalizations'];
+
+        if (count($normalizations) !== count($rawMerchants)) {
+            throw new RuntimeException(sprintf(
+                'Merchant normalization count mismatch: expected %d, got %d',
+                count($rawMerchants),
+                count($normalizations)
+            ));
+        }
+
+        $results = [];
+        $rawMerchantsList = array_values($rawMerchants);
+
+        foreach ($normalizations as $idx => $item) {
+            $raw = $rawMerchantsList[$idx];
+            $results[$raw] = [
+                'normalized' => $item['normalized'] ?? '',
+                'regex' => $item['regex'] ?? null,
+            ];
+        }
+        
         return $results;
     }
 
     protected function parseCategoryResponse(string $content, array $rawCategories): array
     {
-        $lines = array_filter(array_map('trim', explode("\n", $content)));
-        $results = [];
-        
-        foreach ($rawCategories as $idx => $raw) {
-            if (!isset($lines[$idx])) {
-                throw new RuntimeException("AI response missing category at index {$idx}");
-            }
+        $data = json_decode($content, true);
 
-            $parts = explode('|', $lines[$idx], 2);
-            $results[$raw] = [
-                'normalized' => trim($parts[0]),
-                'regex' => isset($parts[1]) ? trim($parts[1]) : null,
-            ];
+        if (!isset($data['normalizations']) || !is_array($data['normalizations'])) {
+            throw new RuntimeException('Invalid category normalization response structure');
         }
 
+        $normalizations = $data['normalizations'];
+
+        if (count($normalizations) !== count($rawCategories)) {
+            throw new RuntimeException(sprintf(
+                'Category normalization count mismatch: expected %d, got %d',
+                count($rawCategories),
+                count($normalizations)
+            ));
+        }
+
+        $results = [];
+        $rawCategoriesList = array_values($rawCategories);
+
+        foreach ($normalizations as $idx => $item) {
+            $raw = $rawCategoriesList[$idx];
+            $results[$raw] = [
+                'normalized' => $item['normalized'] ?? '',
+                'regex' => $item['regex'] ?? null,
+            ];
+        }
+        
         return $results;
     }
 }

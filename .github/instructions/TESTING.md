@@ -31,25 +31,42 @@
 - Put test CSV files with: `Storage::disk('local')->put('file.csv', $content)`
 
 ### Mocking GeminiService
-- GeminiService returns **plain text** with newline-separated results, NOT JSON
-- Merchant format: `"Merchant Name|REGEX_PATTERN\nNext Merchant|NEXT_PATTERN.*"`
-- Category format: `"Category|REGEX_PATTERN\nNext Category|NEXT_PATTERN.*"`
+- GeminiService returns **JSON structured output** via `responseJsonSchema`
+- Response format: `{"normalizations": [{"normalized": "Name", "regex": "PATTERN"}, ...]}`
+- Always return proper JSON array with correct number of items
 - Example:
 ```php
 $this->mock(GeminiService::class, function ($mock) {
     $mock->shouldReceive('chat')
         ->andReturn(
-            "Acme Store|ACME.*\nWidget Co|WIDGET.*",  // merchants
-            "Shopping|General\\s+Purchases.*\nGroceries|Food.*"  // categories
+            json_encode(['normalizations' => [
+                ['normalized' => 'Acme Store', 'regex' => 'ACME.*'],
+                ['normalized' => 'Widget Co', 'regex' => 'WIDGET.*'],
+            ]]),  // First call (merchants)
+            json_encode(['normalizations' => [
+                ['normalized' => 'Shopping', 'regex' => 'General\\\\s+Purchases.*'],
+                ['normalized' => 'Groceries', 'regex' => 'Food.*'],
+            ]])   // Second call (categories)
         );
 });
 ```
+- Each normalization object must have `normalized` and `regex` properties
+- Array length must match number of items being normalized
 
 ### Import service patterns
-- Always create `Import` record before calling service->import()
-- Set import_id: `$service->setImportId($import->id)`
+- Use `$service->startImport($user, $path)` - service creates Import record automatically
 - Import records track status: processing → completed/failed
+- Service returns Import instance with id and status
 - Test both direct service calls AND console commands
+- For testing async mode, mock the job or test job directly
+
+### Normalization testing
+- Normalization tables use unique constraints on regex_pattern
+- Test deduplication: AI can return same regex for multiple merchants
+- Upsert behavior: existing patterns should be updated, not fail
+- Use fixture CSV files in `tests/fixtures/csv/` directory
+- Heredoc CSV must NOT be indented (causes leading whitespace)
+- Example fixture usage: `file_get_contents(base_path('tests/fixtures/csv/amex-test.csv'))`
 
 ### Console command testing
 - Use `$this->artisan('command', ['arg' => 'value', '--option' => 'value'])`

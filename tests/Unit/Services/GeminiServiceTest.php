@@ -44,7 +44,7 @@ class GeminiServiceTest extends TestCase
         ]);
 
         $service = new GeminiService();
-        $result = $service->chat('System prompt', 'User prompt', 0.5);
+        $result = $service->chat('System prompt', 'User prompt', null, 0.5);
 
         Http::assertSent(function ($request) {
             return str_contains($request->url(), 'gemini-2.0-flash-exp:generateContent')

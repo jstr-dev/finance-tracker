@@ -34,8 +34,14 @@ class ImportCSVTest extends TestCase
         $this->mock(GeminiService::class, function ($mock) {
             $mock->shouldReceive('chat')
                 ->andReturn(
-                    "Acme Store|ACME.*\nGrocery Mart|GROCERY.*",
-                    "Shopping|General\\s+Purchases.*\nGroceries|General\\s+Purchases.*"
+                    json_encode(['normalizations' => [
+                        ['normalized' => 'Acme Store', 'regex' => 'ACME.*'],
+                        ['normalized' => 'Grocery Mart', 'regex' => 'GROCERY.*'],
+                    ]]),
+                    json_encode(['normalizations' => [
+                        ['normalized' => 'Shopping', 'regex' => 'General\\s+Purchases.*'],
+                        ['normalized' => 'Groceries', 'regex' => 'General\\s+Purchases.*'],
+                    ]])
                 );
         });
 
@@ -61,8 +67,14 @@ class ImportCSVTest extends TestCase
         $this->mock(GeminiService::class, function ($mock) {
             $mock->shouldReceive('chat')
                 ->andReturn(
-                    "Acme Store|ACME.*\nGrocery Mart|GROCERY.*",
-                    "Shopping|General\\s+Purchases.*\nGroceries|General\\s+Purchases.*"
+                    json_encode(['normalizations' => [
+                        ['normalized' => 'Acme Store', 'regex' => 'ACME.*'],
+                        ['normalized' => 'Grocery Mart', 'regex' => 'GROCERY.*'],
+                    ]]),
+                    json_encode(['normalizations' => [
+                        ['normalized' => 'Shopping', 'regex' => 'General\\s+Purchases.*'],
+                        ['normalized' => 'Groceries', 'regex' => 'General\\s+Purchases.*'],
+                    ]])
                 );
         });
 
@@ -132,8 +144,8 @@ class ImportCSVTest extends TestCase
         $this->mock(GeminiService::class, function ($mock) {
             $mock->shouldReceive('chat')
                 ->andReturn(
-                    "Widget Co|WIDGET.*",
-                    "Shopping|General\\s+Purchases.*"
+                    json_encode(['normalizations' => [['normalized' => 'Widget Co', 'regex' => 'WIDGET.*']]]),
+                    json_encode(['normalizations' => [['normalized' => 'Shopping', 'regex' => 'General\\s+Purchases.*']]])
                 );
         });
 
