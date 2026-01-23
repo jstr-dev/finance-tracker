@@ -2,8 +2,21 @@
 
 namespace App\Services\Import;
 
+use App\Models\Provider;
+
 class AmericanExpressImportService extends AbstractImportService implements HasCategory
 {
+    /**
+     * Patterns to detect payment transactions (case-insensitive).
+     */
+    private const PAYMENT_PATTERNS = [
+        'PAYMENT.*THANK\s*YOU',
+        'DIRECT\s*DEBIT',
+        'PAYMENT\s*RECEIVED',
+        'AUTOPAY',
+        'AUTOMATIC\s*PAYMENT',
+    ];
+
     public function getType(): string
     {
         return 'amex';
@@ -31,6 +44,31 @@ class AmericanExpressImportService extends AbstractImportService implements HasC
     public function extractCategory(array $row): ?string
     {
         return $row['category'] ?? null;
+    }
+
+    protected function getProviderId(): int
+    {
+        return Provider::where('code', Provider::CODE_AMEX)->value('id');
+    }
+
+    protected function getAccountType(): string
+    {
+        return Provider::ACCOUNT_TYPE_CREDIT;
+    }
+
+    protected function isPayment(array $row): bool
+    {
+        $description = $row['description'] ?? '';
+        $payee = $row['appears on your statement as'] ?? '';
+        $searchText = $description . ' ' . $payee;
+
+        foreach (self::PAYMENT_PATTERNS as $pattern) {
+            if (@preg_match('~' . $pattern . '~i', $searchText)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function formatRowForImport(array $row): array

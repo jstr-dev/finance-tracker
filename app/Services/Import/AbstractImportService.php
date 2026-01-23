@@ -30,6 +30,17 @@ abstract class AbstractImportService
     abstract protected function getRequiredCSVHeaders(): array;
     abstract protected function getRowTransactionID(array $row): string;
     abstract protected function formatRowForImport(array $row): array;
+    abstract protected function getProviderId(): int;
+    abstract protected function getAccountType(): string;
+
+    /**
+     * Determine if a transaction row represents a payment.
+     * Override in child classes to implement provider-specific detection.
+     */
+    protected function isPayment(array $row): bool
+    {
+        return false;
+    }
 
     /**
      * Start an import. Creates Import record and either processes synchronously or dispatches a job.
@@ -211,6 +222,9 @@ abstract class AbstractImportService
                 'transaction_id' => $transactionId,
                 'merchant' => $rawMerchant ? ($normalizedMerchants[$rawMerchant] ?? $rawMerchant) : null,
                 'category' => $rawCategory ? ($normalizedCategories[$rawCategory] ?? $rawCategory) : null,
+                'provider_id' => $this->getProviderId(),
+                'account_type' => $this->getAccountType(),
+                'transaction_type' => $this->isPayment($row) ? 'payment' : 'purchase',
                 'currency' => $this->currency,
                 'import_id' => $this->import?->id,
                 'imported_at' => now(),

@@ -111,5 +111,47 @@ class AmericanExpressImportServiceTest extends TestCase
         $this->assertNull($result['postcode']);
         $this->assertNull($result['country']);
     }
+
+    public function test_detects_payment_transactions(): void
+    {
+        $service = new AmericanExpressImportService();
+        
+        $paymentRows = [
+            ['description' => 'PAYMENT THANK YOU - DIRECT DEBIT'],
+            ['description' => 'DIRECT DEBIT PAYMENT'],
+            ['description' => 'PAYMENT RECEIVED'],
+            ['description' => 'AUTOPAY SCHEDULED'],
+            ['appears on your statement as' => 'AUTOMATIC PAYMENT'],
+        ];
+
+        $reflection = new \ReflectionClass($service);
+        $method = $reflection->getMethod('isPayment');
+        $method->setAccessible(true);
+
+        foreach ($paymentRows as $row) {
+            $result = $method->invoke($service, $row);
+            $this->assertTrue($result, 'Failed to detect payment: ' . json_encode($row));
+        }
+    }
+
+    public function test_does_not_detect_regular_purchases_as_payments(): void
+    {
+        $service = new AmericanExpressImportService();
+        
+        $purchaseRows = [
+            ['description' => 'ACME STORE*ABC123  ONLINE.COM'],
+            ['description' => 'GROCERY MART 9999 DOWNTOWN'],
+            ['appears on your statement as' => 'AMAZON MARKETPLACE'],
+        ];
+
+        $reflection = new \ReflectionClass($service);
+        $method = $reflection->getMethod('isPayment');
+        $method->setAccessible(true);
+
+        foreach ($purchaseRows as $row) {
+            $result = $method->invoke($service, $row);
+            $this->assertFalse($result, 'Incorrectly detected payment: ' . json_encode($row));
+        }
+    }
 }
 

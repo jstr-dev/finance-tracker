@@ -37,10 +37,12 @@ class ImportCSVTest extends TestCase
                     json_encode(['normalizations' => [
                         ['normalized' => 'Acme Store', 'regex' => 'ACME.*'],
                         ['normalized' => 'Grocery Mart', 'regex' => 'GROCERY.*'],
+                        ['normalized' => 'Payment', 'regex' => 'PAYMENT.*'],
                     ]]),
                     json_encode(['normalizations' => [
                         ['normalized' => 'Shopping', 'regex' => 'General\\s+Purchases.*'],
                         ['normalized' => 'Groceries', 'regex' => 'General\\s+Purchases.*'],
+                        ['normalized' => 'Bills', 'regex' => 'Payments.*'],
                     ]])
                 );
         });
@@ -54,11 +56,13 @@ class ImportCSVTest extends TestCase
         $service->setDisk('local');
         $import = $service->startImport($user, 'test-amex.csv');
 
-        $this->assertEquals(2, UserTransaction::where('user_id', $user->id)->count());
+        $this->assertEquals(3, UserTransaction::where('user_id', $user->id)->count());
         $this->assertDatabaseHas('user_transactions', [
             'user_id' => $user->id,
             'transaction_id' => 'TX001234567890001',
             'import_id' => $import->id,
+            'account_type' => 'credit',
+            'transaction_type' => 'purchase',
         ]);
     }
 
@@ -70,10 +74,12 @@ class ImportCSVTest extends TestCase
                     json_encode(['normalizations' => [
                         ['normalized' => 'Acme Store', 'regex' => 'ACME.*'],
                         ['normalized' => 'Grocery Mart', 'regex' => 'GROCERY.*'],
+                        ['normalized' => 'Payment', 'regex' => 'PAYMENT.*'],
                     ]]),
                     json_encode(['normalizations' => [
                         ['normalized' => 'Shopping', 'regex' => 'General\\s+Purchases.*'],
                         ['normalized' => 'Groceries', 'regex' => 'General\\s+Purchases.*'],
+                        ['normalized' => 'Bills', 'regex' => 'Payments.*'],
                     ]])
                 );
         });
@@ -114,7 +120,17 @@ class ImportCSVTest extends TestCase
             'amount' => 15.75,
         ]);
 
-        $this->assertEquals(2, UserTransaction::where('user_id', $user->id)->count());
+        $this->assertEquals(3, UserTransaction::where('user_id', $user->id)->count());
+        
+        // Verify payment transaction is marked correctly
+        $this->assertDatabaseHas('user_transactions', [
+            'user_id' => $user->id,
+            'transaction_id' => 'TX001234567890003',
+            'import_id' => $import->id,
+            'amount' => -1000.00,
+            'account_type' => 'credit',
+            'transaction_type' => 'payment',
+        ]);
     }
 
     public function test_fails_when_user_not_found(): void
