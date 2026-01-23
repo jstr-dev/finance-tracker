@@ -3,6 +3,7 @@
 namespace App\Services\Import;
 
 use App\Models\Provider;
+use Cache;
 
 class AmericanExpressImportService extends AbstractImportService implements HasCategory
 {
@@ -48,7 +49,9 @@ class AmericanExpressImportService extends AbstractImportService implements HasC
 
     protected function getProviderId(): int
     {
-        return Provider::where('code', Provider::CODE_AMEX)->value('id');
+        return Cache::remember('provider_' . Provider::CODE_AMEX, 60, function () {
+            return Provider::where('code', Provider::CODE_AMEX)->firstOrFail()->id;
+        });
     }
 
     protected function getAccountType(): string
