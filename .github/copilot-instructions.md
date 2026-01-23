@@ -1,5 +1,7 @@
 # Copilot Instructions
 
+**Additional Instructions:** Read all files matching `.github/instructions/**/*.md`
+
 ## Project summary
 - Laravel 12 backend with Inertia.js + React 19 + TypeScript frontend.
 - Vite + Tailwind CSS for builds and styling.

@@ -23,12 +23,13 @@
 	- Async: `$service->startImport($user, $path, true)` - dispatches `ProcessCSVImport` job
 - Transaction normalization flow:
 	1. Extract unique merchants/categories from chunk
-	2. Check normalization cache (exact match → regex match)
+	2. Check normalization cache (exact match → regex match with ~ delimiter)
 	3. Batch remaining unknowns to AI for normalization
-	4. **Deduplicate regex patterns** before storing (prevent duplicates)
-	5. Upsert normalizations by regex_pattern (handle race conditions)
-	6. Cache results (raw + normalized + regex pattern)
-	7. Upsert transactions with normalized data
+	4. **Validate regex patterns** - test each pattern, discard invalid ones
+	5. **Deduplicate regex patterns** before storing (prevent duplicates)
+	6. Upsert normalizations by regex_pattern (handle race conditions)
+	7. Cache results (raw + normalized + regex pattern)
+	8. Upsert transactions with normalized data
 - Console command: `php artisan import:csv {userId} {path} {--type=amex} {--async}`
 - Import services must:
 	- Implement `getType()` - returns import type identifier

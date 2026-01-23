@@ -33,7 +33,10 @@
 ### Mocking GeminiService
 - GeminiService returns **JSON structured output** via `responseJsonSchema`
 - Response format: `{"normalizations": [{"normalized": "Name", "regex": "PATTERN"}, ...]}`
+- Regex patterns are validated before use (invalid patterns logged and discarded)
+- Patterns use `~` delimiter in preg_match: `@preg_match('~' . $pattern . '~i', $text)`
 - Always return proper JSON array with correct number of items
+- Regex patterns should be valid PHP regex without delimiters
 - Example:
 ```php
 $this->mock(GeminiService::class, function ($mock) {

@@ -105,6 +105,14 @@ GeminiService uses **structured outputs** with JSON schema to ensure type-safe, 
 - Type-safe responses (no parsing errors)
 - Predictable structure for testing
 - Better error messages on validation failure
+- Regex patterns validated before storage
+
+**Regex Safety:**
+- All regex patterns from Gemini are validated before use
+- Uses `~` delimiter for `preg_match()` (less likely to conflict than `/`)
+- Invalid patterns are logged and discarded (set to null)
+- Prompts explicitly tell Gemini to use PHP-compatible regex without delimiters
+- Example validation: `@preg_match('~' . $pattern . '~i', '')` tests pattern validity
 
 **Implementation:**
 ```php
@@ -127,6 +135,8 @@ $schema = [
 ];
 
 $response = $gemini->chat($systemPrompt, $userPrompt, $schema);
+
+// Response is validated: invalid regex → null + logged warning
 ```
 
 ### Merchant Normalization
@@ -140,8 +150,14 @@ $response = $gemini->chat($systemPrompt, $userPrompt, $schema);
 
 **Matching Priority:**
 1. Exact match on `raw_merchant`
-2. Regex match on any `regex_pattern`
+2. Regex match on any `regex_pattern` (using `~` delimiter with case-insensitive flag)
 3. AI normalization (creates new record)
+
+**Regex Execution:**
+- Patterns use `~` delimiter: `@preg_match('~' . $pattern . '~i', $merchant)`
+- Case-insensitive matching (i flag)
+- Error suppression (@) to handle any edge cases gracefully
+- Invalid patterns during normalization are logged and discarded
 
 **Example:**
 ```
