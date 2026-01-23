@@ -22,6 +22,17 @@ abstract protected function getType(): string;
 abstract protected function getRequiredCSVHeaders(): array;
 abstract protected function getRowTransactionID(array $row): string;
 abstract protected function formatRowForImport(array $row): array;
+abstract protected function getProviderId(): int;
+abstract protected function getAccountType(): string;
+```
+
+**Optional Methods:**
+```php
+// Override to detect payment transactions (vs purchases)
+protected function isPayment(array $row): bool
+{
+    return false; // default implementation
+}
 ```
 
 **Optional Interface:**
@@ -77,7 +88,61 @@ For each chunk of 100 rows:
 4. Deduplicate regex patterns (keep first occurrence)
 5. Upsert normalizations to database
 6. Format transactions with normalized data
-7. Upsert transactions to `user_transactions` table
+7. Add provider metadata (provider_id, account_type, transaction_type)
+8. Detect payment transactions using provider-specific patterns
+9. Upsert transactions to `user_transactions` table
+
+## Provider System
+
+### Providers Table
+Stores information about financial service providers.
+
+**Fields:**
+- `id` - Primary key
+- `code` - Unique provider code (e.g., 'amex', 'monzo')
+- `name` - Display name (e.g., 'American Express')
+- `type` - Provider type (credit_card, bank, investment, crypto)
+
+**Seeded Providers:**
+- AMEX (code: 'amex', type: 'credit_card')
+- Monzo (code: 'monzo', type: 'bank')
+- Trading 212 (code: 'trading212', type: 'investment')
+
+### Account Types
+Transactions are tagged with account type from Provider constants:
+- `credit` - Credit card accounts (debt-based spending)
+- `debit` - Bank/checking accounts (real money)
+- `investment` - Investment accounts
+- `cash` - Cash transactions
+
+### Transaction Types
+Transactions are classified as:
+- `purchase` - Money spent (default for all non-payment transactions)
+- `payment` - Payment toward credit card balance or incoming refund
+
+**Payment Detection:**
+Implemented per-provider using `isPayment(array $row): bool` method. Searches description/merchant fields for patterns like:
+- `PAYMENT.*THANK YOU`
+- `DIRECT DEBIT`
+- `PAYMENT RECEIVED`
+- `AUTOPAY`
+
+Example (AMEX):
+```php
+protected function isPayment(array $row): bool
+{
+    $description = $row['description'] ?? '';
+    $payee = $row['appears on your statement as'] ?? '';
+    $searchText = $description . ' ' . $payee;
+
+    foreach (self::PAYMENT_PATTERNS as $pattern) {
+        if (@preg_match('~' . $pattern . '~i', $searchText)) {
+            return true;
+        }
+    }
+    return false;
+}
+```
 
 ## Transaction Normalization
 
@@ -233,8 +298,16 @@ php artisan import:csv 1 imports/statement.csv --type=amex --async
 
 namespace App\Services\Import;
 
+use App\Models\Provider;
+
 class MyBankImportService extends AbstractImportService
 {
+    // Define payment patterns for this provider
+    private const PAYMENT_PATTERNS = [
+        'PAYMENT.*RECEIVED',
+        'TRANSFER.*IN',
+    ];
+
     protected function getType(): string
     {
         return 'mybank';
@@ -248,6 +321,28 @@ class MyBankImportService extends AbstractImportService
     protected function getRowTransactionID(array $row): string
     {
         return trim($row['reference'], "'");
+    }
+
+    protected function getProviderId(): int
+    {
+        return Provider::where('code', 'mybank')->value('id');
+    }
+
+    protected function getAccountType(): string
+    {
+        return Provider::ACCOUNT_TYPE_DEBIT; // or CREDIT, INVESTMENT, CASH
+    }
+
+    protected function isPayment(array $row): bool
+    {
+        $description = $row['description'] ?? '';
+        
+        foreach (self::PAYMENT_PATTERNS as $pattern) {
+            if (@preg_match('~' . $pattern . '~i', $description)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected function formatRowForImport(array $row): array
@@ -269,7 +364,19 @@ class MyBankImportService extends AbstractImportService
 }
 ```
 
-### Step 2: Register in Console Command
+### Step 2: Add Provider to Database
+Create a migration or seed to add your provider:
+```php
+DB::table('providers')->insert([
+    'code' => 'mybank',
+    'name' => 'My Bank',
+    'type' => 'bank',
+    'created_at' => now(),
+    'updated_at' => now(),
+]);
+```
+
+### Step 3: Register in Console Command
 Edit `app/Console/Commands/ImportCSV.php`:
 ```php
 protected $services = [
@@ -278,7 +385,7 @@ protected $services = [
 ];
 ```
 
-### Step 3: Test Your Service
+### Step 4: Test Your Service
 Create tests in `tests/Feature/Console/` and `tests/Unit/Services/Import/`.
 
 See [TESTING.md](TESTING.md) for CSV import testing patterns.
@@ -343,7 +450,8 @@ See [TESTING.md](TESTING.md) for CSV import testing patterns.
 
 **Models:**
 - `app/Models/Import.php` - Import tracking
-- `app/Models/UserTransaction.php` - Transaction storage
+- `app/Models/Provider.php` - Provider information
+- `app/Models/UserTransaction.php` - Transaction storage with provider/type fields
 - `app/Models/MerchantNormalization.php` - Merchant cache
 - `app/Models/CategoryNormalization.php` - Category cache
 
@@ -356,6 +464,8 @@ See [TESTING.md](TESTING.md) for CSV import testing patterns.
 **Migrations:**
 - `database/migrations/2026_01_21_220000_create_normalization_cache_tables.php`
 - `database/migrations/2026_01_23_000000_add_unique_constraint_to_normalization_regex_patterns.php`
+- `database/migrations/2026_01_23_120000_create_providers_table.php`
+- `database/migrations/2026_01_23_120001_add_provider_and_types_to_user_transactions.php`
 
 **Tests:**
 - `tests/Feature/Console/ImportCSVTest.php` - Command tests

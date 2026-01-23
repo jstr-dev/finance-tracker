@@ -63,6 +63,22 @@ $this->mock(GeminiService::class, function ($mock) {
 - Test both direct service calls AND console commands
 - For testing async mode, mock the job or test job directly
 
+### Provider and transaction type testing
+- Verify `provider_id` is set correctly on imported transactions
+- Check `account_type` matches provider (credit for AMEX, debit for banks)
+- Test `transaction_type` detection:
+  - `purchase` for regular transactions
+  - `payment` for payment/refund transactions
+- Use reflection to test protected `isPayment()` method:
+  ```php
+  $reflection = new \ReflectionClass($service);
+  $method = $reflection->getMethod('isPayment');
+  $method->setAccessible(true);
+  $result = $method->invoke($service, $row);
+  ```
+- Test payment detection patterns (PAYMENT THANK YOU, DIRECT DEBIT, etc.)
+- Verify purchase transactions are NOT detected as payments
+
 ### Normalization testing
 - Normalization tables use unique constraints on regex_pattern
 - Test deduplication: AI can return same regex for multiple merchants
@@ -70,12 +86,14 @@ $this->mock(GeminiService::class, function ($mock) {
 - Use fixture CSV files in `tests/fixtures/csv/` directory
 - Heredoc CSV must NOT be indented (causes leading whitespace)
 - Example fixture usage: `file_get_contents(base_path('tests/fixtures/csv/amex-test.csv'))`
+- Include payment transactions in test fixtures (negative amounts)
 
 ### Console command testing
 - Use `$this->artisan('command', ['arg' => 'value', '--option' => 'value'])`
 - Chain assertions: `->expectsOutput('message')->assertExitCode(0)`
 - Verify database state after command execution
 - Test failure scenarios (user not found, invalid type, etc.)
+- Verify provider_id, account_type, transaction_type are set correctly
 
 ## Test data privacy
 - Use generic merchant names (Acme Store, Widget Co, Food Mart)
