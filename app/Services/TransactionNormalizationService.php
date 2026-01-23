@@ -17,6 +17,11 @@ class TransactionNormalizationService
         1. A clean, recognizable merchant/brand name
         2. A regex pattern (without delimiters) that will match similar variations
 
+        IMPORTANT: Regex patterns will be used with PHP's preg_match() function with ~ delimiters.
+        - Do NOT include delimiters (/, ~, etc.) in your pattern
+        - Escape special regex characters appropriately for PHP
+        - Test that your pattern would be valid in: preg_match('~YOUR_PATTERN~i', $text)
+
         Example input: "AMAZON PRIME*Y898213HD  AMZN.CO.UK/PM"
         Example output: {"normalized": "Amazon Prime", "regex": "AMAZON\\s+PRIME.*"}
 
@@ -56,6 +61,11 @@ class TransactionNormalizationService
         Normalize these transaction categories. For each one, provide:
         1. A standardized category name from this list: {categories}
         2. A regex pattern (without delimiters) that will match similar variations
+
+        IMPORTANT: Regex patterns will be used with PHP's preg_match() function with ~ delimiters.
+        - Do NOT include delimiters (/, ~, etc.) in your pattern
+        - Escape special regex characters appropriately for PHP
+        - Test that your pattern would be valid in: preg_match('~YOUR_PATTERN~i', $text)
 
         Example input: "General Purchases-Online Purchases"
         Example output: {"normalized": "Shopping", "regex": "General\\s+Purchases.*Online"}
@@ -116,7 +126,7 @@ class TransactionNormalizationService
 
             $regexMatch = null;
             foreach ($regexPatterns as $pattern) {
-                if (preg_match('/' . $pattern->regex_pattern . '/i', $raw)) {
+                if (@preg_match('~' . $pattern->regex_pattern . '~i', $raw)) {
                     $regexMatch = $pattern;
                     break;
                 }
@@ -210,7 +220,7 @@ class TransactionNormalizationService
 
             $regexMatch = null;
             foreach ($regexPatterns as $pattern) {
-                if (preg_match('/' . $pattern->regex_pattern . '/i', $raw)) {
+                if (@preg_match('~' . $pattern->regex_pattern . '~i', $raw)) {
                     $regexMatch = $pattern;
                     break;
                 }
@@ -331,9 +341,24 @@ class TransactionNormalizationService
 
         foreach ($normalizations as $idx => $item) {
             $raw = $rawMerchantsList[$idx];
+            $regex = $item['regex'] ?? null;
+
+            // Validate regex pattern if provided
+            if ($regex !== null && $regex !== '') {
+                if (@preg_match('~' . $regex . '~i', '') === false) {
+                    // Invalid regex - skip it and log
+                    logger()->warning('Invalid regex pattern from Gemini', [
+                        'pattern' => $regex,
+                        'merchant' => $raw,
+                        'error' => error_get_last(),
+                    ]);
+                    $regex = null;
+                }
+            }
+
             $results[$raw] = [
                 'normalized' => $item['normalized'] ?? '',
-                'regex' => $item['regex'] ?? null,
+                'regex' => $regex,
             ];
         }
         
@@ -363,9 +388,24 @@ class TransactionNormalizationService
 
         foreach ($normalizations as $idx => $item) {
             $raw = $rawCategoriesList[$idx];
+            $regex = $item['regex'] ?? null;
+
+            // Validate regex pattern if provided
+            if ($regex !== null && $regex !== '') {
+                if (@preg_match('~' . $regex . '~i', '') === false) {
+                    // Invalid regex - skip it and log
+                    logger()->warning('Invalid regex pattern from Gemini', [
+                        'pattern' => $regex,
+                        'category' => $raw,
+                        'error' => error_get_last(),
+                    ]);
+                    $regex = null;
+                }
+            }
+
             $results[$raw] = [
                 'normalized' => $item['normalized'] ?? '',
-                'regex' => $item['regex'] ?? null,
+                'regex' => $regex,
             ];
         }
         
