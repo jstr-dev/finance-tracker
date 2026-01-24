@@ -59,12 +59,13 @@ jobs:
           cache: 'npm'
 
       - name: Install NPM and Build Assets
-        run: npm ci
-        run: npm run build
+        run: |
+          npm ci
+          npm run build
 
       - name: Run PHPUnit
-        run: php artisan key:generate
         run: |
+          php artisan key:generate
           vendor/bin/phpunit \
             --bootstrap vendor/autoload.php \
             --configuration phpunit.xml \
