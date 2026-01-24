@@ -7,9 +7,9 @@ on:
     branches: ["master"]
 
 permissions:
-  statuses: write
+  contents: read
   checks: write
-  
+
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -45,7 +45,6 @@ jobs:
         with:
           php-version: '8.2'
           extensions: mbstring, pdo, pdo_mysql
-          coverage: none
 
       - name: Copy .env
         run: cp .env.example .env
@@ -68,10 +67,11 @@ jobs:
       - name: Generate key
         run: php artisan key:generate
 
-      - name: Run Tests (JUnit output)
-        run: |
-          php artisan test \
-            --log-junit storage/logs/junit.xml
+      - name: Ensure logs folder exists
+        run: mkdir -p storage/logs
+
+      - name: Run PHPUnit (JUnit output)
+        run: vendor/bin/phpunit --configuration phpunit.xml --log-junit storage/logs/junit.xml
 
       - name: Publish PHPUnit Results
         uses: dorny/test-reporter@v1
