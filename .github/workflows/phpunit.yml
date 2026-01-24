@@ -78,13 +78,13 @@ jobs:
             --log-junit storage/logs/junit.xml \
             ./tests
 
-      - name: Show junit.xml head (debug)
-        run: head -40 storage/logs/junit.xml
+      - name: Copy junit.xml to root for reporter
+        run: cp storage/logs/junit.xml junit.xml
 
       - name: Publish PHPUnit Results
         uses: dorny/test-reporter@v1
         if: always()
         with:
           name: PHPUnit Tests
-          path: storage/logs/junit.xml
+          path: junit.xml
           reporter: java-junit
