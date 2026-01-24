@@ -2,9 +2,9 @@ name: PHPUnit Tests
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
 
 jobs:
   run:
@@ -35,32 +35,44 @@ jobs:
       DB_PASSWORD: secret
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.2'
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo, pdo_mysql
+          coverage: none
 
-    - name: Copy .env
-      run: cp .env.example .env
+      - name: Copy .env
+        run: cp .env.example .env
 
-    - name: Install Composer Dependencies
-      run: composer install --no-interaction --prefer-dist
+      - name: Install Composer Dependencies
+        run: composer install --no-interaction --prefer-dist
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
-    - name: Install NPM Dependencies
-      run: npm ci
+      - name: Install NPM Dependencies
+        run: npm ci
 
-    - name: Build Assets
-      run: npm run build
+      - name: Build Assets
+        run: npm run build
 
-    - name: Generate key
-      run: php artisan key:generate
+      - name: Generate key
+        run: php artisan key:generate
 
-    - name: Run Tests
-      run: php artisan test
+      - name: Run Tests (JUnit output)
+        run: |
+          php artisan test \
+            --log-junit storage/logs/junit.xml
+
+      - name: Publish PHPUnit Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: PHPUnit Tests
+          path: storage/logs/junit.xml
+          reporter: java-junit
