@@ -58,19 +58,12 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install NPM Dependencies
+      - name: Install NPM and Build Assets
         run: npm ci
-
-      - name: Build Assets
         run: npm run build
 
-      - name: Generate key
+      - name: Run PHPUnit
         run: php artisan key:generate
-
-      - name: Ensure logs folder exists
-        run: mkdir -p storage/logs && chmod -R 777 storage/logs
-
-      - name: Run PHPUnit (JUnit output)
         run: |
           vendor/bin/phpunit \
             --bootstrap vendor/autoload.php \
@@ -78,13 +71,10 @@ jobs:
             --log-junit storage/logs/junit.xml \
             ./tests
 
-      - name: Copy junit.xml to root for reporter
-        run: cp storage/logs/junit.xml junit.xml
-
       - name: Publish PHPUnit Results
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         if: always()
         with:
           name: PHPUnit Tests
-          path: junit.xml
-          reporter: junit
+          path: storage/logs/junit.xml
+          reporter: phpunit-junit
