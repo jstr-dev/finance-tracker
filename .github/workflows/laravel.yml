@@ -19,14 +19,14 @@ jobs:
 
     - name: Copy .env
       run: cp .env.example .env
+      env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: ":memory:"
 
     - name: Install Dependencies
       run: composer install --no-interaction --prefer-dist
 
     - name: Generate key
-      env:
-        DB_CONNECTION: sqlite
-        DB_DATABASE: ":memory:"
       run: php artisan key:generate
       
     - name: Run Tests
