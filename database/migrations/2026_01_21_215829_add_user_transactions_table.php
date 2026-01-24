@@ -47,10 +47,7 @@ return new class extends Migration
             $table->string('city')->nullable();
 
             // Transaction metadata
-            $table->foreignId('import_id')
-                ->constrained('imports')
-                ->cascadeOnDelete()
-                ->nullable();
+            $table->unsignedBigInteger('import_id')->nullable();
 
             $table->timestamp('imported_at')->nullable();
             $table->string('transaction_id')->unique();
@@ -58,6 +55,11 @@ return new class extends Migration
 
             $table->timestamps();
             $table->index(['user_id', 'transaction_date']);
+
+            $table->foreign('import_id')
+                ->references('id')
+                ->on('imports')
+                ->cascadeOnDelete();
         });
     }
 

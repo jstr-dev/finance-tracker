@@ -13,17 +13,16 @@ class NewConnectionTest extends TestCase
 {
     use RefreshDatabase;
 
-    public static string $validKeyId;
-    public static string $validSecretKey;
+    // Generate valid 64-char test credentials (validation requires min:64, max:64)
+    public static string $validKeyId = 'test_key_id_1234567890123456789012345678901234567890123456789012';
+    public static string $validSecretKey = 'test_secret_1234567890123456789012345678901234567890123456789012';
+    
     public User $user;
     public $mock;
 
     public function setUp(): void
     {
         parent::setUp();
-
-        self::$validKeyId = env('TRADING212_TEST_KEY_ID', '');
-        self::$validSecretKey = env('TRADING212_TEST_SECRET_KEY', '');
 
         $this->user = User::factory()->create();
         $this->mock = $this->mock(Trading212Service::class, function (MockInterface $mock) {
@@ -45,9 +44,6 @@ class NewConnectionTest extends TestCase
 
     public static function invalidDataProvider()
     {
-        self::$validKeyId = env('TRADING212_TEST_KEY_ID', '');
-        self::$validSecretKey = env('TRADING212_TEST_SECRET_KEY', '');
-
         return [
             'Too Short Key Id' => ['1234567', self::$validSecretKey],
             'Too Short Secret Key' => [self::$validKeyId, '1234567'],
