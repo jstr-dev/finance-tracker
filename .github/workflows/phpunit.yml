@@ -11,7 +11,7 @@ permissions:
   checks: write
 
 jobs:
-  run:
+  tests:
     runs-on: ubuntu-latest
 
     services:
@@ -72,10 +72,11 @@ jobs:
             --log-junit storage/logs/junit.xml \
             ./tests
 
-      - name: Publish PHPUnit Results
+      - name: Test Report
         uses: dorny/test-reporter@v2
-        if: always()
+        if: ${{ !cancelled() }}
         with:
           name: PHPUnit Tests
           path: storage/logs/junit.xml
           reporter: phpunit-junit
+          fail-on-error: true
