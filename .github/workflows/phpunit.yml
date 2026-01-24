@@ -87,4 +87,4 @@ jobs:
         with:
           name: PHPUnit Tests
           path: junit.xml
-          reporter: java-junit
+          reporter: junit
