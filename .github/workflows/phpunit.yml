@@ -68,10 +68,18 @@ jobs:
         run: php artisan key:generate
 
       - name: Ensure logs folder exists
-        run: mkdir -p storage/logs
+        run: mkdir -p storage/logs && chmod -R 777 storage/logs
 
       - name: Run PHPUnit (JUnit output)
-        run: vendor/bin/phpunit --configuration phpunit.xml --log-junit storage/logs/junit.xml
+        run: |
+          vendor/bin/phpunit \
+            --bootstrap vendor/autoload.php \
+            --configuration phpunit.xml \
+            --log-junit storage/logs/junit.xml \
+            ./tests
+
+      - name: Show junit.xml head (debug)
+        run: head -40 storage/logs/junit.xml
 
       - name: Publish PHPUnit Results
         uses: dorny/test-reporter@v1
